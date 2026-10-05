@@ -3,11 +3,13 @@ import type { VideoSpec, TemplateConfig } from "@faceless/core";
 import { BaroqueMonoLayout } from "./templates/BaroqueMonoLayout.js";
 import { CleanSplitLayout } from "./templates/CleanSplitLayout.js";
 import { MinimalLayout } from "./templates/MinimalLayout.js";
+import { AudioMixer, type AudioSources } from "./AudioMixer.js";
 
 export interface MainVideoProps {
   spec?: VideoSpec;
   fontsCss?: string;
   templateConfig?: TemplateConfig;
+  audioSources?: AudioSources;
 }
 
 const DEFAULT_FALLBACK_TEMPLATE: TemplateConfig = {
@@ -37,13 +39,14 @@ const DEFAULT_FALLBACK_TEMPLATE: TemplateConfig = {
   motionPresets: ["fade-in"],
 };
 
-export const MainVideo: React.FC<MainVideoProps> = ({ spec, fontsCss, templateConfig }) => {
+export const MainVideo: React.FC<MainVideoProps> = ({ spec, fontsCss, templateConfig, audioSources }) => {
   const resolvedTemplate: TemplateConfig = templateConfig || DEFAULT_FALLBACK_TEMPLATE;
   const templateId = spec?.templateId || resolvedTemplate.id;
 
   return (
     <>
       {fontsCss && <style dangerouslySetInnerHTML={{ __html: fontsCss }} />}
+      <AudioMixer spec={spec} audioSources={audioSources} />
       {templateId === "baroque-mono" ? (
         <BaroqueMonoLayout spec={spec} templateConfig={resolvedTemplate} />
       ) : templateId === "clean-split" ? (

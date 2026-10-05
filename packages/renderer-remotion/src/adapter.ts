@@ -11,6 +11,7 @@ import {
   type RendererAdapter,
   type FormatId,
 } from "@faceless/core";
+import type { AudioSources } from "./remotion/AudioMixer.js";
 
 export class RemotionRendererAdapter implements RendererAdapter {
   private entryPoint: string;
@@ -98,6 +99,118 @@ export class RemotionRendererAdapter implements RendererAdapter {
     return cssRules.join("\n");
   }
 
+  private fileToDataUri(filePath: string): string | undefined {
+    if (!existsSync(filePath)) return undefined;
+    try {
+      const ext = filePath.split(".").pop()?.toLowerCase();
+      let mime = "audio/mpeg";
+      if (ext === "wav") mime = "audio/wav";
+      else if (ext === "ogg") mime = "audio/ogg";
+      else if (ext === "aac" || ext === "m4a") mime = "audio/aac";
+      else if (ext === "flac") mime = "audio/flac";
+
+      const buf = readFileSync(filePath);
+      return `data:${mime};base64,${buf.toString("base64")}`;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private resolveAudioFile(identifier: string, projectDir: string, type: "music" | "sfx" | "narration"): string | undefined {
+    if (!identifier) return undefined;
+    if (identifier.startsWith("data:") || identifier.startsWith("http:") || identifier.startsWith("https:")) {
+      return identifier;
+    }
+
+    // 1. Direct path relative to projectDir
+    const directPath = resolve(projectDir, identifier);
+    if (existsSync(directPath)) {
+      return this.fileToDataUri(directPath);
+    }
+
+    // 2. Candidate subdirectories in projectDir
+    const projectSubDirs = ["assets/audio", "audio", "assets", "music", "sfx"];
+    for (const sub of projectSubDirs) {
+      const p = resolve(projectDir, sub, identifier);
+      if (existsSync(p)) return this.fileToDataUri(p);
+      for (const ext of [".mp3", ".wav", ".ogg", ".m4a"]) {
+        const pWithExt = resolve(projectDir, sub, identifier + ext);
+        if (existsSync(pWithExt)) return this.fileToDataUri(pWithExt);
+      }
+    }
+
+    // 3. Library directories
+    const baseLibraryDirs = [
+      resolve(process.cwd(), "library"),
+      resolve(dirname(fileURLToPath(import.meta.url)), "../../../library"),
+    ];
+
+    for (const libDir of baseLibraryDirs) {
+      if (type === "music" || type === "sfx") {
+        const p = resolve(libDir, type, identifier);
+        if (existsSync(p)) return this.fileToDataUri(p);
+        for (const ext of [".mp3", ".wav", ".ogg", ".m4a"]) {
+          const pWithExt = resolve(libDir, type, identifier + ext);
+          if (existsSync(pWithExt)) return this.fileToDataUri(pWithExt);
+        }
+      }
+
+      // Check library.json if present
+      const libJsonPath = resolve(libDir, "library.json");
+      if (existsSync(libJsonPath)) {
+        try {
+          const libContent = JSON.parse(readFileSync(libJsonPath, "utf-8"));
+          const assets = libContent[type] || [];
+          const found = assets.find((a: any) => a.id === identifier);
+          if (found && found.path) {
+            const assetPath = resolve(process.cwd(), found.path);
+            if (existsSync(assetPath)) return this.fileToDataUri(assetPath);
+          }
+        } catch {}
+      }
+    }
+
+    return undefined;
+  }
+
+  public resolveAudioSources(spec: VideoSpec, projectDir: string): AudioSources {
+    const audioSources: AudioSources = {
+      music: {},
+      sfx: {},
+    };
+
+    // Narration
+    if (spec.narration?.audioPath) {
+      audioSources.narration = this.resolveAudioFile(spec.narration.audioPath, projectDir, "narration");
+    }
+
+    // Music
+    for (const track of spec.music || []) {
+      const resolved = this.resolveAudioFile(track.libraryId, projectDir, "music");
+      if (resolved) {
+        if (!audioSources.music) audioSources.music = {};
+        audioSources.music[track.id] = resolved;
+        audioSources.music[track.libraryId] = resolved;
+      }
+    }
+
+    // SFX
+    for (const ch of spec.chapters || []) {
+      for (const b of ch.beats || []) {
+        for (const s of b.sfx || []) {
+          const resolved = this.resolveAudioFile(s.sfxId, projectDir, "sfx");
+          if (resolved) {
+            if (!audioSources.sfx) audioSources.sfx = {};
+            audioSources.sfx[s.id] = resolved;
+            audioSources.sfx[s.sfxId] = resolved;
+          }
+        }
+      }
+    }
+
+    return audioSources;
+  }
+
   async render(options: {
     specPath: string;
     format: FormatId;
@@ -108,7 +221,8 @@ export class RemotionRendererAdapter implements RendererAdapter {
     const spec = this.readSpec(options.specPath);
     const templateConfig = this.templateManager.resolveTemplate(spec.templateId);
     const fontsCss = this.getFontsCss(templateConfig);
-    const inputProps = { spec, fontsCss, templateConfig };
+    const audioSources = this.resolveAudioSources(spec, dirname(options.specPath));
+    const inputProps = { spec, fontsCss, templateConfig, audioSources };
 
     const compositionId = options.format === "short-9x16" ? "Short9x16" : "Long16x9";
     const bundleLocation = await this.getBundle();
@@ -145,7 +259,8 @@ export class RemotionRendererAdapter implements RendererAdapter {
     const spec = this.readSpec(options.specPath);
     const templateConfig = this.templateManager.resolveTemplate(spec.templateId);
     const fontsCss = this.getFontsCss(templateConfig);
-    const inputProps = { spec, fontsCss, templateConfig };
+    const audioSources = this.resolveAudioSources(spec, dirname(options.specPath));
+    const inputProps = { spec, fontsCss, templateConfig, audioSources };
 
     const compositionId = options.format === "short-9x16" ? "Short9x16" : "Long16x9";
     const bundleLocation = await this.getBundle();
