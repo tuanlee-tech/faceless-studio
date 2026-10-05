@@ -1,4 +1,4 @@
-import { resolve } from "node:path";
+import { resolve, basename } from "node:path";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import {
   ProjectManager,
@@ -14,6 +14,7 @@ export interface RenderCommandOptions {
   chapter?: string;
   frames?: [number, number];
   baseDir?: string;
+  spec?: string;
   json?: boolean;
 }
 
@@ -21,7 +22,7 @@ export async function runRender(options: RenderCommandOptions): Promise<void> {
   const { slug } = options;
 
   if (!slug) {
-    const errorMsg = "Missing required argument: <slug>. Usage: studio render <slug> --format long-16x9|short-9x16 [--json]";
+    const errorMsg = "Missing required argument: <slug>. Usage: studio render <slug> --format long-16x9|short-9x16 [--spec <file>] [--json]";
     if (options.json) {
       process.stdout.write(JSON.stringify({ success: false, error: errorMsg }, null, 2) + "\n");
     } else {
@@ -46,10 +47,21 @@ export async function runRender(options: RenderCommandOptions): Promise<void> {
     process.exit(1);
   }
 
-  const format: FormatId = options.format === "short-9x16" ? "short-9x16" : "long-16x9";
-  const specPath = resolve(baseDir, slug, "spec.json");
+  const specFileName = options.spec || "spec.json";
+  const specPath = resolve(baseDir, slug, specFileName);
 
-  // Ensure spec.json exists; bootstrap a valid minimal spec if missing
+  // If custom spec was specified and does not exist, fail
+  if (options.spec && !existsSync(specPath)) {
+    const errorMsg = `Custom spec file not found at: ${specPath}`;
+    if (options.json) {
+      process.stdout.write(JSON.stringify({ success: false, error: errorMsg }, null, 2) + "\n");
+    } else {
+      console.error(`❌ Error: ${errorMsg}`);
+    }
+    process.exit(1);
+  }
+
+  // Ensure default spec.json exists; bootstrap a valid minimal spec if missing
   if (!existsSync(specPath)) {
     const projectJsonPath = resolve(baseDir, slug, "project.json");
     let topicId = "sample";
@@ -108,9 +120,29 @@ export async function runRender(options: RenderCommandOptions): Promise<void> {
     writeFileSync(specPath, JSON.stringify(defaultSpec, null, 2), "utf-8");
   }
 
-  const outDir = resolve(baseDir, slug, "out", format);
-  mkdirSync(outDir, { recursive: true });
-  const outPath = resolve(outDir, `${slug}.mp4`);
+  // Determine format
+  let format: FormatId = options.format as FormatId;
+  if (!format) {
+    if (specFileName.includes("short")) {
+      format = "short-9x16";
+    } else {
+      format = "long-16x9";
+    }
+  }
+
+  // Determine output path
+  let outDir: string;
+  let outPath: string;
+  if (specFileName !== "spec.json" && specFileName.includes("short")) {
+    const shortBaseName = basename(specFileName, ".json");
+    outDir = resolve(baseDir, slug, "dist", "shorts");
+    mkdirSync(outDir, { recursive: true });
+    outPath = resolve(outDir, `${shortBaseName}.mp4`);
+  } else {
+    outDir = resolve(baseDir, slug, "out", format);
+    mkdirSync(outDir, { recursive: true });
+    outPath = resolve(outDir, `${slug}.mp4`);
+  }
 
   try {
     if (state.stages.some((s) => s.stage === format)) {
@@ -118,7 +150,7 @@ export async function runRender(options: RenderCommandOptions): Promise<void> {
     }
 
     if (!options.json) {
-      console.log(`🎬 Rendering video for '${slug}' (format: ${format})...`);
+      console.log(`🎬 Rendering video for '${slug}' (spec: ${specFileName}, format: ${format})...`);
     }
 
     const adapter = new RemotionRendererAdapter();
@@ -129,21 +161,33 @@ export async function runRender(options: RenderCommandOptions): Promise<void> {
       outPath,
       onProgress: (progress) => {
         if (!options.json) {
-          const pct = Math.round(progress * 100);
-          process.stdout.write(`\r  Rendering: ${pct}%`);
+          const percent = Math.round(progress * 100);
+          process.stdout.write(`\rRender progress: ${percent}%`);
         }
       },
     });
 
-    if (state.stages.some((s) => s.stage === format)) {
-      pm.updateStage(slug, format, { status: "done" });
+    if (!options.json) {
+      console.log(`\n✅ Render complete: ${outPath}`);
     }
 
-    pm.recordEvent(slug, {
+    if (state.stages.some((s) => s.stage === format)) {
+      pm.updateStage(slug, format, {
+        status: "done",
+      });
+    }
+
+    // Append to events.jsonl
+    const eventsPath = resolve(baseDir, slug, "events.jsonl");
+    const event = {
       type: "render_completed",
+      slug,
       format,
+      specFile: specFileName,
       outPath,
-    });
+      timestamp: new Date().toISOString(),
+    };
+    writeFileSync(eventsPath, (existsSync(eventsPath) ? readFileSync(eventsPath, "utf-8") : "") + JSON.stringify(event) + "\n", "utf-8");
 
     if (options.json) {
       process.stdout.write(
@@ -152,25 +196,20 @@ export async function runRender(options: RenderCommandOptions): Promise<void> {
             success: true,
             slug,
             format,
+            specFile: specFileName,
             outPath,
-            message: `Video rendered successfully at ${outPath}`,
+            status: "done",
           },
           null,
-          2
-        ) + "\n"
+          2,
+        ) + "\n",
       );
-    } else {
-      console.log(`\n✅ Render completed successfully!`);
-      console.log(`   Output: ${outPath}`);
     }
-
-    process.exit(0);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
     if (state.stages.some((s) => s.stage === format)) {
-      pm.updateStage(slug, format, { status: "failed", error: message });
+      pm.updateStage(slug, format, { status: "failed" });
     }
-
+    const message = err instanceof Error ? err.message : String(err);
     if (options.json) {
       process.stdout.write(JSON.stringify({ success: false, error: message }, null, 2) + "\n");
     } else {

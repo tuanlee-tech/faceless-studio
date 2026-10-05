@@ -30,3 +30,23 @@ export const DirectResultSchema = z
 export type OutlineResult = z.infer<typeof OutlineResultSchema>;
 export type ScriptResult = z.infer<typeof ScriptResultSchema>;
 export type DirectResult = z.infer<typeof DirectResultSchema>;
+
+export const ShortCandidateSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  startWordId: z.string(),
+  endWordId: z.string(),
+  hookReason: z.string().optional(),
+  estimatedSeconds: z.number().optional(),
+});
+
+export const ShortCandidatesResultSchema = z
+  .object({
+    candidates: z.array(ShortCandidateSchema).min(1),
+  })
+  .passthrough()
+  .describe("shorts-candidates-schema");
+
+export type ShortCandidate = z.infer<typeof ShortCandidateSchema>;
+export type ShortCandidatesResult = z.infer<typeof ShortCandidatesResultSchema>;
+

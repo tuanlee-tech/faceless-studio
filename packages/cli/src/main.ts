@@ -11,6 +11,7 @@ import { runRun } from "./commands/run.js";
 import { runValidate } from "./commands/validate.js";
 import { runRender } from "./commands/render.js";
 import { runAssets } from "./commands/assets.js";
+import { runShorts } from "./commands/shorts.js";
 import { parseArgs } from "./utils/parse-args.js";
 
 const { command, positionals, flags } = parseArgs(process.argv.slice(2));
@@ -90,6 +91,17 @@ switch (command) {
     break;
   }
 
+  case "shorts": {
+    const slug = positionals[0];
+    await runShorts({
+      slug,
+      baseDir: typeof flags["base-dir"] === "string" ? flags["base-dir"] : undefined,
+      maxCandidates: flags["max-candidates"] ? Number(flags["max-candidates"]) : undefined,
+      json: jsonFlag,
+    });
+    break;
+  }
+
   case "render": {
     const slug = positionals[0];
     const format = (typeof flags.format === "string" ? flags.format : undefined) as
@@ -97,10 +109,12 @@ switch (command) {
       | "short-9x16"
       | undefined;
     const chapter = typeof flags.chapter === "string" ? flags.chapter : undefined;
+    const spec = typeof flags.spec === "string" ? flags.spec : undefined;
     await runRender({
       slug,
       format,
       chapter,
+      spec,
       baseDir: typeof flags["base-dir"] === "string" ? flags["base-dir"] : undefined,
       json: jsonFlag,
     });
@@ -112,6 +126,6 @@ switch (command) {
       console.error(`Unknown command: ${command}`);
     }
     console.log("Usage: studio <command> [options]");
-    console.log("Commands: doctor, new, status, run, validate, assets, render");
+    console.log("Commands: doctor, new, status, run, validate, assets, shorts, render");
     process.exit(command ? 1 : 0);
 }
