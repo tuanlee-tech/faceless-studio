@@ -1,0 +1,9 @@
+README.md
+align.py
+pyproject.toml
+tts.py
+faceless_sidecar.egg-info/PKG-INFO
+faceless_sidecar.egg-info/SOURCES.txt
+faceless_sidecar.egg-info/dependency_links.txt
+faceless_sidecar.egg-info/entry_points.txt
+faceless_sidecar.egg-info/top_level.txt

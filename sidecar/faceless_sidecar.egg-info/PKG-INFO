@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: faceless-sidecar
+Version: 0.0.1
+Summary: TTS and alignment sidecar for Faceless Studio
+Requires-Python: >=3.10

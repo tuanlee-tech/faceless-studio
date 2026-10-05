@@ -1,0 +1,17 @@
+[project]
+name = "faceless-sidecar"
+version = "0.0.1"
+requires-python = ">=3.10"
+description = "TTS and alignment sidecar for Faceless Studio"
+
+[project.scripts]
+faceless-tts = "tts:main"
+faceless-align = "align:main"
+
+# Dependencies sẽ thêm khi có VieNeu-TTS + WhisperX
+# [project.optional-dependencies]
+# tts = ["vieneu-tts>=3.0"]
+# align = ["whisperx>=3.0"]
+
+[tool.setuptools]
+py-modules = ["tts", "align"]

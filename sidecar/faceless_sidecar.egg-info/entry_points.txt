@@ -1,0 +1,3 @@
+[console_scripts]
+faceless-align = align:main
+faceless-tts = tts:main

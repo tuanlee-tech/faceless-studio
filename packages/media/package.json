@@ -1,0 +1,46 @@
+{
+  "name": "@faceless/media",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./ffmpeg": {
+      "import": "./dist/ffmpeg.js",
+      "types": "./dist/ffmpeg.d.ts"
+    },
+    "./tts": {
+      "import": "./dist/tts.js",
+      "types": "./dist/tts.d.ts"
+    },
+    "./align": {
+      "import": "./dist/align.js",
+      "types": "./dist/align.d.ts"
+    },
+    "./asset-provider": {
+      "import": "./dist/asset-provider.js",
+      "types": "./dist/asset-provider.d.ts"
+    },
+    "./cache": {
+      "import": "./dist/cache.js",
+      "types": "./dist/cache.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@faceless/core": "workspace:*",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

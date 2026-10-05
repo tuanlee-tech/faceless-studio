@@ -1,0 +1,30 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Project outputs (large, regeneratable)
+projects/*/audio/chunks/
+projects/*/audio/narration.wav
+projects/*/audio/mix/
+projects/*/out/
+projects/*/assets/incoming/
+projects/*/assets/processed/
+
+# Audio/Video files
+*.wav
+*.mp4
+*.mp3
+*.mov
+
+# Sidecar
+sidecar/.venv/
+sidecar/__pycache__/
+sidecar/*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
