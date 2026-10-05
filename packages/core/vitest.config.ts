@@ -4,9 +4,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: [
-      "src/**/__tests__/**/*.test.ts",
-      "src/project-manager.test.ts",
-      "src/task-inbox.test.ts",
+      "src/**/*.test.ts",
     ],
   },
 });

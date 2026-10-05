@@ -4,6 +4,8 @@ import { MainVideo, type MainVideoProps } from "./MainVideo.js";
 
 const DEFAULT_PROPS: MainVideoProps = {
   spec: undefined,
+  fontsCss: undefined,
+  templateConfig: undefined,
 };
 
 export const RemotionRoot: React.FC = () => {

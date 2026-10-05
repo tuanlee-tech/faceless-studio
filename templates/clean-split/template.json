@@ -1,0 +1,39 @@
+{
+  "id": "clean-split",
+  "name": "Clean Split",
+  "version": "1.0.0",
+  "description": "Phong cách hiện đại, tin tức & tutorial, chia đôi màn hình giữa text và visual với font Sans-serif",
+  "fonts": [
+    {
+      "family": "Be Vietnam Pro",
+      "file": "fonts/BeVietnamPro-Regular.ttf",
+      "weight": "400",
+      "style": "normal"
+    },
+    {
+      "family": "Be Vietnam Pro",
+      "file": "fonts/BeVietnamPro-Bold.ttf",
+      "weight": "700",
+      "style": "normal"
+    }
+  ],
+  "colors": {
+    "background": "#0f172a",
+    "text": "#f8fafc",
+    "primary": "#38bdf8",
+    "secondary": "#64748b",
+    "accent": "#0ea5e9",
+    "highlight": "#38bdf8"
+  },
+  "subtitles": {
+    "fontFamily": "'Be Vietnam Pro', system-ui, sans-serif",
+    "fontSize": 44,
+    "color": "#f8fafc",
+    "highlightColor": "#38bdf8",
+    "bottomOffset": 80,
+    "maxWordsPerLine": 7,
+    "textTransform": "none"
+  },
+  "layoutPresets": ["split-left", "split-right", "center-card", "full-bleed"],
+  "motionPresets": ["slide-up", "fade-in", "scale-in"]
+}

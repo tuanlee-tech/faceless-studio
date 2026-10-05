@@ -5,6 +5,16 @@
 
 ---
 
+## Dành cho Agents: Cách ghi nhận bài học
+- **Khi nào ghi:** BẤT CỨ KHI NÀO bạn làm sai, bị user hoặc agent khác review và chỉ ra lỗi, hoặc bạn mất nhiều thời gian fix một bug khó, hãy bổ sung một mục mới vào tài liệu này.
+- **Cách ghi:** 
+  - Tạo một Header `##` mới mang tên bài học (đánh số nối tiếp).
+  - Viết ngắn gọn "Sai lầm đã mắc" và "Bài học & Quy tắc rút ra".
+  - Bổ sung nguyên tắc kiểm tra vào **Checklist Tự Kiểm Tra** ở cuối file này.
+  - Mục đích là để các agent (hoặc sub-agent) đi sau đọc được, học tập từ sai lầm của bạn và thực thi tốt hơn.
+
+---
+
 ## 1. Nghiêm cấm "Báo cáo ảo / Bịa số liệu" (Truthful & Verifiable Reporting)
 
 - **Sai lầm đã mắc (Task 1.1):** Báo cáo nghiệm thu ghi nhận có file `src/task-inbox.test.ts` chứa 11 bài test và `project-manager.test.ts` chứa 5 bài test. Thực tế file chưa hề được tách, tất cả bị gom trong 1 file với số lượng test khác hoàn toàn. Báo cáo đã "bịa" ra thông tin chi tiết không có thật.
@@ -93,7 +103,29 @@
 
 ---
 
-## 7. Checklist Tự Kiểm Tra Bắt Buộc Trước Khi Báo Cáo Hoàn Thành (Pre-Flight Checklist)
+## 7. Cô lập tuyệt đối môi trường Trình duyệt khỏi Node Core Modules (`node:fs`) trong Remotion
+
+- **Sai lầm đã mắc (Task 2.1 / 2.2):** 
+  - Trong component `MainVideo.tsx` (được Webpack đóng gói để chạy trong môi trường Chromium), khi import biến runtime `BUILTIN_TEMPLATES` từ `@faceless/core`, Webpack phân giải file barrel `index.ts`. File này xuất các class phía server như `ProjectManager`, `TaskInbox`, `TemplateManager` vốn sử dụng `node:fs`.
+  - Kết quả: Webpack 5 crash với lỗi `UnhandledSchemeError: Reading from "node:fs" is not handled by plugins (Unhandled scheme)`.
+- **Quy tắc cho Sub-agents:**
+  1. **Trong React/Remotion components:** Chỉ sử dụng **`import type`** từ `@faceless/core` (ví dụ `import type { VideoSpec, TemplateConfig } from "@faceless/core"`). `import type` bị TypeScript xóa sạch lúc biên dịch nên Webpack không bao giờ thấy mã nguồn phía server.
+  2. **Chia tách trách nhiệm Node vs Browser:** Mọi thao tác đọc file đĩa (`readFileSync`) và nạp font phải được thực hiện ở `adapter.ts` (Node context), sau đó chuyển giao dữ liệu (ví dụ CSS `@font-face` base64 hoặc `templateConfig`) vào component thông qua `inputProps`.
+
+---
+
+## 8. Đồng bộ kiểu TypeScript giữa Zod Inferred Types và Test Fixtures
+
+- **Sai lầm đã mắc (Task 2.4):**
+  - Khi schema Zod định nghĩa các trường có `.default(...)` (như `offsetSec`, `volume`, `source`), hàm suy luận `z.infer<...>` xác định kiểu đầu ra có các thuộc tính này là **bắt buộc (required)**.
+  - Khi viết test fixture gán trực tiếp kiểu `const spec: VideoSpec = { ... }` mà bỏ qua các trường có default, Vitest vẫn chạy qua (do strip types), nhưng `tsc` lập tức chặn lại với lỗi `TS2741: Property is missing`.
+- **Quy tắc cho Sub-agents:**
+  1. Khi viết test fixtures, hoặc là điền đầy đủ các trường có `.default()`, hoặc dùng `Schema.parse(...)` để Zod tự động bổ sung default values trước khi truyền vào hàm.
+  2. Luôn chạy `pnpm run lint` (`tsc --noEmit`) ngay sau khi viết test mới để bắt các lỗi thiếu thuộc tính kiểu dữ liệu.
+
+---
+
+## 9. Checklist Tự Kiểm Tra Bắt Buộc Trước Khi Báo Cáo Hoàn Thành (Pre-Flight Checklist)
 
 Mỗi khi làm xong một task, sub-agent **BẮT BUỘC** phải tự kiểm tra danh sách sau:
 

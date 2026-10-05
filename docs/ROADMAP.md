@@ -17,12 +17,13 @@
 - `studio render test-01 --format long-16x9` xuất mp4 ≥ 30 giây, có subtitle, có giọng TTS (mock sine wave nếu chưa có VieNeu).
 - `studio status test-01 --json` trả JSON đúng schema.
 
-## Phase 2 — Template & Asset hệ thống
+## Phase 2 — Template & Asset hệ thống (ĐÃ HOÀN THÀNH ✅)
 **Mục tiêu:** 2 template (baroque-mono, clean-split), asset router (prompt pack → import), library management.
 **Tiêu chí nghiệm thu:**
-- Đổi template trong `project.json` → render lại cho kết quả khác biệt rõ ràng về layout/style.
-- `studio assets test-01 export` xuất prompt pack; `studio assets test-01 import` nhận asset vào đúng vị trí.
-- Subtitle tiếng Việt hiển thị đúng (font bundled, không dùng font hệ thống).
+- [x] Đổi template trong `project.json` → render lại cho kết quả khác biệt rõ ràng về layout/style (`baroque-mono`, `clean-split`).
+- [x] `studio assets <slug> export` xuất prompt pack; `studio assets <slug> import` nhận asset vào đúng vị trí và cập nhật `manifest.json`.
+- [x] Subtitle tiếng Việt hiển thị đúng neo theo từ (font bundled trong `templates/*/fonts/`, không dùng font hệ thống).
+- [x] Quản lý license toàn cục trong `library/library.json` và kiểm tra hợp lệ bằng `LicenseManager`.
 
 ## Phase 3 — Short 9:16, QA, Audio mix
 **Mục tiêu:** Sinh Short từ spec, QA gates, audio mixing (nhạc + SFX + ducking).

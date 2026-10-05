@@ -1,0 +1,26 @@
+{
+  "id": "minimal",
+  "name": "Minimal Dark",
+  "version": "1.0.0",
+  "description": "Template tối giản Phase 1, nền đen chữ trắng",
+  "fonts": [],
+  "colors": {
+    "background": "#000000",
+    "text": "#ffffff",
+    "primary": "#888888",
+    "secondary": "#555555",
+    "accent": "#aaaaaa",
+    "highlight": "#ffd700"
+  },
+  "subtitles": {
+    "fontFamily": "system-ui, sans-serif",
+    "fontSize": 44,
+    "color": "#ffffff",
+    "highlightColor": "#ffd700",
+    "bottomOffset": 80,
+    "maxWordsPerLine": 6,
+    "textTransform": "none"
+  },
+  "layoutPresets": ["center-text"],
+  "motionPresets": ["fade-in"]
+}

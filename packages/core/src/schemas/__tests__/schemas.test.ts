@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest";
 import { VideoSpecSchema, SPEC_VERSION } from "../video-spec.js";
 import { ProjectConfigSchema } from "../project-config.js";
 import { ProjectStateSchema } from "../stage-state.js";
+import { TemplateConfigSchema } from "../template-config.js";
+import { AssetManifestSchema } from "../asset-manifest.js";
+import { LibrarySchema } from "../library.js";
 
 describe("VideoSpecSchema", () => {
   const validSpec = {
@@ -94,5 +97,91 @@ describe("ProjectStateSchema", () => {
     };
     const result = ProjectStateSchema.parse(state);
     expect(result.stages).toHaveLength(2);
+  });
+});
+
+describe("TemplateConfigSchema", () => {
+  const validTemplate = {
+    id: "baroque-mono",
+    name: "Baroque Monochrome",
+    colors: {
+      background: "#0a0a0c",
+      text: "#f3f3f3",
+      primary: "#c5a059",
+      highlight: "#e5c07b",
+    },
+    fonts: [
+      {
+        family: "Playfair Display",
+        file: "fonts/PlayfairDisplay-Regular.ttf",
+      },
+    ],
+    subtitles: {
+      fontSize: 52,
+      color: "#f3f3f3",
+      highlightColor: "#e5c07b",
+    },
+  };
+
+  it("parses valid template config with defaults", () => {
+    const result = TemplateConfigSchema.parse(validTemplate);
+    expect(result.id).toBe("baroque-mono");
+    expect(result.version).toBe("1.0.0");
+    expect(result.layoutPresets).toContain("center-text");
+    expect(result.subtitles.bottomOffset).toBe(80);
+  });
+
+  it("roundtrip: parse -> stringify -> parse", () => {
+    const first = TemplateConfigSchema.parse(validTemplate);
+    const json = JSON.stringify(first);
+    const second = TemplateConfigSchema.parse(JSON.parse(json));
+    expect(second).toEqual(first);
+  });
+
+  it("rejects invalid template missing colors", () => {
+    const bad = { id: "bad", name: "Bad" };
+    expect(() => TemplateConfigSchema.parse(bad)).toThrow();
+  });
+});
+
+describe("AssetManifestSchema", () => {
+  it("parses valid manifest with defaults", () => {
+    const manifest = {
+      projectSlug: "p1",
+      updatedAt: "2026-10-05T00:00:00Z",
+      assets: [
+        {
+          id: "a1",
+          fileName: "a1.png",
+          filePath: "assets/processed/a1.png",
+          license: "CC0",
+          importedAt: "2026-10-05T00:00:00Z",
+        },
+      ],
+    };
+    const parsed = AssetManifestSchema.parse(manifest);
+    expect(parsed.assets[0].kind).toBe("image");
+    expect(parsed.assets[0].license).toBe("CC0");
+  });
+});
+
+describe("LibrarySchema", () => {
+  it("parses valid library.json", () => {
+    const lib = {
+      music: [],
+      sfx: [],
+      fonts: [
+        {
+          id: "f1",
+          name: "Font 1",
+          type: "font",
+          path: "fonts/f1.ttf",
+          license: "OFL-1.1",
+        },
+      ],
+    };
+    const parsed = LibrarySchema.parse(lib);
+    expect(parsed.fonts).toHaveLength(1);
+    expect(parsed.fonts[0].license).toBe("OFL-1.1");
   });
 });

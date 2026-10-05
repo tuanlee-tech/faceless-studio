@@ -1,75 +1,56 @@
 import React from "react";
-import { useCurrentFrame, useVideoConfig } from "remotion";
-import type { VideoSpec } from "@faceless/core";
+import type { VideoSpec, TemplateConfig } from "@faceless/core";
+import { BaroqueMonoLayout } from "./templates/BaroqueMonoLayout.js";
+import { CleanSplitLayout } from "./templates/CleanSplitLayout.js";
+import { MinimalLayout } from "./templates/MinimalLayout.js";
 
 export interface MainVideoProps {
   spec?: VideoSpec;
+  fontsCss?: string;
+  templateConfig?: TemplateConfig;
 }
 
-export const MainVideo: React.FC<MainVideoProps> = ({ spec }) => {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+const DEFAULT_FALLBACK_TEMPLATE: TemplateConfig = {
+  id: "minimal",
+  name: "Minimal Dark",
+  version: "1.0.0",
+  description: "Template tối giản Phase 1, nền đen chữ trắng",
+  fonts: [],
+  colors: {
+    background: "#000000",
+    text: "#ffffff",
+    primary: "#888888",
+    secondary: "#555555",
+    accent: "#aaaaaa",
+    highlight: "#ffd700",
+  },
+  subtitles: {
+    fontFamily: "system-ui, sans-serif",
+    fontSize: 44,
+    color: "#ffffff",
+    highlightColor: "#ffd700",
+    bottomOffset: 80,
+    maxWordsPerLine: 6,
+    textTransform: "none",
+  },
+  layoutPresets: ["center-text"],
+  motionPresets: ["fade-in"],
+};
 
-  const title = (spec?.meta?.title as string) || spec?.projectSlug || "Faceless Studio";
-  const seconds = (frame / fps).toFixed(1);
-  const chapterTitle = spec?.chapters?.[0]?.title || "Chapter 1";
-
-  const isPortrait = height > width;
+export const MainVideo: React.FC<MainVideoProps> = ({ spec, fontsCss, templateConfig }) => {
+  const resolvedTemplate: TemplateConfig = templateConfig || DEFAULT_FALLBACK_TEMPLATE;
+  const templateId = spec?.templateId || resolvedTemplate.id;
 
   return (
-    <div
-      style={{
-        flex: 1,
-        backgroundColor: "#000000",
-        color: "#ffffff",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-        width: "100%",
-        height: "100%",
-        boxSizing: "border-box",
-        padding: isPortrait ? "60px 40px" : "40px 80px",
-      }}
-    >
-      <div
-        style={{
-          textTransform: "uppercase",
-          letterSpacing: "4px",
-          fontSize: isPortrait ? 24 : 20,
-          color: "#888888",
-          marginBottom: 16,
-        }}
-      >
-        {chapterTitle}
-      </div>
-
-      <h1
-        style={{
-          fontSize: isPortrait ? 56 : 64,
-          fontWeight: 700,
-          textAlign: "center",
-          margin: "0 0 24px 0",
-          maxWidth: "90%",
-          lineHeight: 1.2,
-        }}
-      >
-        {title}
-      </h1>
-
-      <div
-        style={{
-          display: "flex",
-          gap: "20px",
-          fontSize: isPortrait ? 24 : 20,
-          color: "#aaaaaa",
-        }}
-      >
-        <span>Time: {seconds}s</span>
-        <span>•</span>
-        <span>Frame: {frame}</span>
-      </div>
-    </div>
+    <>
+      {fontsCss && <style dangerouslySetInnerHTML={{ __html: fontsCss }} />}
+      {templateId === "baroque-mono" ? (
+        <BaroqueMonoLayout spec={spec} templateConfig={resolvedTemplate} />
+      ) : templateId === "clean-split" ? (
+        <CleanSplitLayout spec={spec} templateConfig={resolvedTemplate} />
+      ) : (
+        <MinimalLayout spec={spec} templateConfig={resolvedTemplate} />
+      )}
+    </>
   );
 };

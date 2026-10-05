@@ -1,5 +1,26 @@
 {
   "music": [],
   "sfx": [],
-  "fonts": []
+  "fonts": [
+    {
+      "id": "playfair-display",
+      "name": "Playfair Display",
+      "type": "font",
+      "path": "templates/baroque-mono/fonts/PlayfairDisplay-Regular.ttf",
+      "license": "OFL-1.1",
+      "author": "Claus Eggers Sørensen",
+      "sourceUrl": "https://fonts.google.com/specimen/Playfair+Display",
+      "description": "Serif font for baroque-mono template supporting Vietnamese charset"
+    },
+    {
+      "id": "be-vietnam-pro",
+      "name": "Be Vietnam Pro",
+      "type": "font",
+      "path": "templates/clean-split/fonts/BeVietnamPro-Regular.ttf",
+      "license": "OFL-1.1",
+      "author": "Vietanh Nguyen",
+      "sourceUrl": "https://fonts.google.com/specimen/Be+Vietnam+Pro",
+      "description": "Sans-serif font for clean-split template supporting Vietnamese charset"
+    }
+  ]
 }

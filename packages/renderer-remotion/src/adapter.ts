@@ -5,7 +5,9 @@ import { bundle } from "@remotion/bundler";
 import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
 import {
   VideoSpecSchema,
+  TemplateManager,
   type VideoSpec,
+  type TemplateConfig,
   type RendererAdapter,
   type FormatId,
 } from "@faceless/core";
@@ -13,8 +15,11 @@ import {
 export class RemotionRendererAdapter implements RendererAdapter {
   private entryPoint: string;
   private bundleLocation?: string;
+  private templateManager: TemplateManager;
 
-  constructor(customEntryPoint?: string) {
+  constructor(customEntryPoint?: string, templatesDir?: string) {
+    this.templateManager = new TemplateManager(templatesDir);
+
     if (customEntryPoint) {
       this.entryPoint = customEntryPoint;
     } else {
@@ -61,6 +66,38 @@ export class RemotionRendererAdapter implements RendererAdapter {
     return VideoSpecSchema.parse(raw);
   }
 
+  private getFontsCss(templateConfig: TemplateConfig): string {
+    const cssRules: string[] = [];
+    const baseTemplatesDirs = [
+      resolve(process.cwd(), "templates"),
+      resolve(dirname(fileURLToPath(import.meta.url)), "../../../templates"),
+    ];
+
+    for (const font of templateConfig.fonts || []) {
+      for (const tDir of baseTemplatesDirs) {
+        const fontPath = resolve(tDir, templateConfig.id, font.file);
+        if (existsSync(fontPath)) {
+          try {
+            const fontBuffer = readFileSync(fontPath);
+            const b64 = fontBuffer.toString("base64");
+            cssRules.push(`
+@font-face {
+  font-family: '${font.family}';
+  src: url('data:font/truetype;charset=utf-8;base64,${b64}') format('truetype');
+  font-weight: ${font.weight || "400"};
+  font-style: ${font.style || "normal"};
+}`);
+            break;
+          } catch {
+            // ignore if read fails
+          }
+        }
+      }
+    }
+
+    return cssRules.join("\n");
+  }
+
   async render(options: {
     specPath: string;
     format: FormatId;
@@ -69,13 +106,17 @@ export class RemotionRendererAdapter implements RendererAdapter {
     onProgress: (progress: number) => void;
   }): Promise<void> {
     const spec = this.readSpec(options.specPath);
+    const templateConfig = this.templateManager.resolveTemplate(spec.templateId);
+    const fontsCss = this.getFontsCss(templateConfig);
+    const inputProps = { spec, fontsCss, templateConfig };
+
     const compositionId = options.format === "short-9x16" ? "Short9x16" : "Long16x9";
     const bundleLocation = await this.getBundle();
 
     const composition = await selectComposition({
       serveUrl: bundleLocation,
       id: compositionId,
-      inputProps: { spec },
+      inputProps,
       logLevel: "warn",
     });
 
@@ -86,7 +127,7 @@ export class RemotionRendererAdapter implements RendererAdapter {
       serveUrl: bundleLocation,
       codec: "h264",
       outputLocation: options.outPath,
-      inputProps: { spec },
+      inputProps,
       frameRange: options.frames,
       logLevel: "warn",
       onProgress: ({ progress }) => {
@@ -102,13 +143,17 @@ export class RemotionRendererAdapter implements RendererAdapter {
     outPath: string;
   }): Promise<void> {
     const spec = this.readSpec(options.specPath);
+    const templateConfig = this.templateManager.resolveTemplate(spec.templateId);
+    const fontsCss = this.getFontsCss(templateConfig);
+    const inputProps = { spec, fontsCss, templateConfig };
+
     const compositionId = options.format === "short-9x16" ? "Short9x16" : "Long16x9";
     const bundleLocation = await this.getBundle();
 
     const composition = await selectComposition({
       serveUrl: bundleLocation,
       id: compositionId,
-      inputProps: { spec },
+      inputProps,
       logLevel: "warn",
     });
 
@@ -118,7 +163,7 @@ export class RemotionRendererAdapter implements RendererAdapter {
       composition,
       serveUrl: bundleLocation,
       output: options.outPath,
-      inputProps: { spec },
+      inputProps,
       frame: options.frame,
       logLevel: "warn",
     });

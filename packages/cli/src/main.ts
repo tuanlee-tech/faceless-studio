@@ -10,6 +10,7 @@ import { runStatus } from "./commands/status.js";
 import { runRun } from "./commands/run.js";
 import { runValidate } from "./commands/validate.js";
 import { runRender } from "./commands/render.js";
+import { runAssets } from "./commands/assets.js";
 import { parseArgs } from "./utils/parse-args.js";
 
 const { command, positionals, flags } = parseArgs(process.argv.slice(2));
@@ -77,6 +78,18 @@ switch (command) {
     break;
   }
 
+  case "assets": {
+    const slug = positionals[0];
+    const action = positionals[1] || (typeof flags.action === "string" ? flags.action : undefined);
+    await runAssets({
+      slug,
+      action,
+      baseDir: typeof flags["base-dir"] === "string" ? flags["base-dir"] : undefined,
+      json: jsonFlag,
+    });
+    break;
+  }
+
   case "render": {
     const slug = positionals[0];
     const format = (typeof flags.format === "string" ? flags.format : undefined) as
@@ -99,6 +112,6 @@ switch (command) {
       console.error(`Unknown command: ${command}`);
     }
     console.log("Usage: studio <command> [options]");
-    console.log("Commands: doctor, new, status, run, validate, render");
+    console.log("Commands: doctor, new, status, run, validate, assets, render");
     process.exit(command ? 1 : 0);
 }
