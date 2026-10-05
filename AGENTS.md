@@ -8,7 +8,8 @@ Giữ file này ngắn. Quy trình chi tiết nằm trong `docs/` và `skills/`;
 
 1. `README.md` → `docs/ROADMAP.md` (biết phase hiện tại và tiêu chí nghiệm thu)
 2. `docs/ARCHITECTURE.md` và `docs/VIDEO-SPEC.md` trước khi viết bất kỳ code nào
-3. Tài liệu còn lại khi chạm vào phần tương ứng (templates, pipeline, assets/audio, QA, cinematic)
+3. `docs/LESSONS-LEARNED.md` (đọc kỹ các sai lầm xương máu và checklist nghiệm thu trước khi code)
+4. Tài liệu còn lại khi chạm vào phần tương ứng (templates, pipeline, assets/audio, QA, cinematic)
 
 ## Luật vàng
 
@@ -21,6 +22,7 @@ Giữ file này ngắn. Quy trình chi tiết nằm trong `docs/` và `skills/`;
 7. **Không phụ thuộc dịch vụ trả phí.** Mặc định dùng thứ miễn phí/local. Bước nào cần dịch vụ ngoài (ảnh/video AI) thì xuất **prompt pack** để người dùng chạy tay, rồi `studio assets import`.
 8. **Mọi asset có license trong sổ cái** (`assets/manifest.json`, `library/library.json`). Không dùng nhạc/SFX/font không rõ license.
 9. **Không bịa số liệu hay trích dẫn.** Nội dung tâm lý/xã hội: gắn `[VERIFY]` cho khẳng định chưa kiểm chứng và không khẳng định tuyệt đối (xem `topics/*/fact-policy.md`).
+10. **Học tập liên tục.** Sau khi hoàn thành một task, fix lỗi, hoặc nhận code review, agent (và sub-agent) **bắt buộc** phải ghi lại tóm tắt các sai lầm, cách khắc phục và bài học kinh nghiệm vào `docs/LESSONS-LEARNED.md`. Phải đọc file này trước khi làm task mới để không lặp lại lỗi cũ.
 
 ## Cross-platform (Windows 10 + Ubuntu 24.04)
 

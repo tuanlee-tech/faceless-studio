@@ -37,10 +37,10 @@ Hệ thống biến **một ý tưởng thô** thành **video faceless hoàn ch�
 3. Dán prompt khởi động dưới đây vào agent:
 
 ```text
-Đọc AGENTS.md, rồi docs/ROADMAP.md. Bắt đầu Phase 0.
+Đọc AGENTS.md, docs/ROADMAP.md và docs/LESSONS-LEARNED.md. Bắt đầu Phase 0.
 Trước khi viết code: tóm tắt cho tôi (tối đa 15 dòng) kế hoạch Phase 0, các giả định,
 và những điểm bạn thấy mâu thuẫn hoặc thiếu trong tài liệu. Chờ tôi xác nhận rồi mới code.
-Mỗi phase kết thúc bằng: chạy kiểm thử, cập nhật tài liệu liên quan, và liệt kê việc còn mở.
+Mỗi phase kết thúc bằng: chạy kiểm thử, cập nhật tài liệu liên quan, ghi bài học vào docs/LESSONS-LEARNED.md, và liệt kê việc còn mở.
 ```
 
 4. Sau mỗi phase, kiểm tra theo "Tiêu chí nghiệm thu" trong `docs/ROADMAP.md` rồi mới cho agent sang phase tiếp theo.

@@ -3,7 +3,21 @@ import { checkBinary } from "../utils/check-binary.js";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
 const execFileAsync = promisify(execFile);
+const CLI_PATH = resolve(fileURLToPath(import.meta.url), "../../../dist/main.js");
+
+async function runCli(args: string[]): Promise<string> {
+  try {
+    const { stdout } = await execFileAsync("node", [CLI_PATH, ...args]);
+    return stdout;
+  } catch (err: any) {
+    if (err.stdout) return err.stdout;
+    throw err;
+  }
+}
 
 describe("checkBinary", () => {
   it("finds node", async () => {
@@ -37,11 +51,7 @@ describe("checkBinary", () => {
 
 describe("runDoctor (via CLI)", () => {
   it("returns valid JSON structure with checks array and allPassed boolean", async () => {
-    const { stdout } = await execFileAsync("node", [
-      "packages/cli/dist/main.js",
-      "doctor",
-      "--json",
-    ], { cwd: "/home/vcc/tuanlee/faceless-studio" });
+    const stdout = await runCli(["doctor", "--json"]);
 
     const parsed = JSON.parse(stdout);
     expect(parsed).toHaveProperty("checks");
@@ -60,10 +70,7 @@ describe("runDoctor (via CLI)", () => {
   });
 
   it("console output contains check icons", async () => {
-    const { stdout } = await execFileAsync("node", [
-      "packages/cli/dist/main.js",
-      "doctor",
-    ], { cwd: "/home/vcc/tuanlee/faceless-studio" });
+    const stdout = await runCli(["doctor"]);
 
     // Should contain check marks (✅ or ❌)
     expect(stdout).toMatch(/✅|❌/);
