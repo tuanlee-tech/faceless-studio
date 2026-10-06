@@ -12,6 +12,7 @@ import { runValidate } from "./commands/validate.js";
 import { runRender } from "./commands/render.js";
 import { runAssets } from "./commands/assets.js";
 import { runShorts } from "./commands/shorts.js";
+import { runQa } from "./commands/qa.js";
 import { parseArgs } from "./utils/parse-args.js";
 
 const { command, positionals, flags } = parseArgs(process.argv.slice(2));
@@ -121,11 +122,32 @@ switch (command) {
     break;
   }
 
+  case "qa": {
+    const slug = positionals[0];
+    const isPre = Boolean(flags.pre);
+    const isPost = Boolean(flags.post);
+    const spec = typeof flags.spec === "string" ? flags.spec : undefined;
+    const format = typeof flags.format === "string" ? flags.format : undefined;
+    const video = typeof flags.video === "string" ? flags.video : undefined;
+
+    await runQa({
+      slug,
+      pre: isPre,
+      post: isPost,
+      spec,
+      format,
+      video,
+      baseDir: typeof flags["base-dir"] === "string" ? flags["base-dir"] : undefined,
+      json: jsonFlag,
+    });
+    break;
+  }
+
   default:
     if (command) {
       console.error(`Unknown command: ${command}`);
     }
     console.log("Usage: studio <command> [options]");
-    console.log("Commands: doctor, new, status, run, validate, assets, shorts, render");
+    console.log("Commands: doctor, new, status, run, validate, assets, shorts, render, qa");
     process.exit(command ? 1 : 0);
 }
