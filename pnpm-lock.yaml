@@ -82,6 +82,9 @@ importers:
       '@faceless/core':
         specifier: workspace:*
         version: link:../core
+      '@faceless/media':
+        specifier: workspace:*
+        version: link:../media
       '@remotion/bundler':
         specifier: ^4.0.200
         version: 4.0.533(postcss@8.5.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

@@ -11,6 +11,10 @@
       "import": "./dist/ffmpeg.js",
       "types": "./dist/ffmpeg.d.ts"
     },
+    "./loudness": {
+      "import": "./dist/loudness-processor.js",
+      "types": "./dist/loudness-processor.d.ts"
+    },
     "./tts": {
       "import": "./dist/tts.js",
       "types": "./dist/tts.d.ts"

@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@faceless/core": "workspace:*",
+    "@faceless/media": "workspace:*",
     "@remotion/bundler": "^4.0.200",
     "@remotion/renderer": "^4.0.200",
     "react": "^18.3.1",

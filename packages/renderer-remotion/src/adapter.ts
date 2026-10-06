@@ -11,6 +11,7 @@ import {
   type RendererAdapter,
   type FormatId,
 } from "@faceless/core";
+import { LoudnessProcessor } from "@faceless/media";
 import type { AudioSources } from "./remotion/AudioMixer.js";
 
 export class RemotionRendererAdapter implements RendererAdapter {
@@ -248,6 +249,14 @@ export class RemotionRendererAdapter implements RendererAdapter {
         options.onProgress(progress);
       },
     });
+
+    // Post-processing: Loudness Normalization chuẩn -14 LUFS (YouTube target)
+    try {
+      const loudnessProcessor = new LoudnessProcessor();
+      await loudnessProcessor.processVideo(options.outPath, options.outPath);
+    } catch {
+      // In case video has no audio or is silent/mock, original video is preserved
+    }
   }
 
   async still(options: {

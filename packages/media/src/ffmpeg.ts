@@ -73,44 +73,41 @@ export interface LoudnessInfo {
 }
 
 /**
- * Đo loudness bằng ffmpeg filter `ebur128`.
+ * Đo loudness bằng ffmpeg filter `loudnorm`.
  */
 export async function measureLoudness(inputPath: string): Promise<LoudnessInfo> {
   const { stderr } = await execFileAsync("ffmpeg", [
-    "-v",
-    "error",
     "-i",
     inputPath,
     "-af",
-    "ebur128=metadata=1",
+    "loudnorm=I=-14:TP=-1:LRA=7:print_format=json",
     "-f",
     "null",
     "-",
   ]);
-  // ffmpeg in ra stderr
-  const lines = stderr.split("\n");
-  const summaryLine = lines.find((l: string) => l.includes("I:"));
-  if (!summaryLine) throw new Error("ebur128 output not found");
-  // Parse: "I: -14.0 LUFS Threshold: -24.0 LUFS LRA: 4.0 LU Threshold: -30.0 LUFS"
-  const parse = (label: string) => {
-    const m = summaryLine.match(new RegExp(`${label}:\\s*([-0-9.]+)`));
-    return m ? parseFloat(m[1]) : NaN;
-  };
+
+  const start = stderr.indexOf("{");
+  const end = stderr.lastIndexOf("}");
+  if (start === -1 || end === -1) {
+    throw new Error(`Failed to parse loudness measurement JSON for ${inputPath}`);
+  }
+
+  const raw = JSON.parse(stderr.slice(start, end + 1));
   return {
-    input_i: parse("I"),
-    input_tp: parse("TP"),
-    input_lra: parse("LRA"),
-    input_thresh: parse("Threshold"),
-    output_i: parse("I"),
-    output_tp: parse("TP"),
-    output_lra: parse("LRA"),
-    output_thresh: parse("Threshold"),
+    input_i: parseFloat(raw.input_i),
+    input_tp: parseFloat(raw.input_tp),
+    input_lra: parseFloat(raw.input_lra),
+    input_thresh: parseFloat(raw.input_thresh),
+    output_i: parseFloat(raw.output_i ?? raw.input_i),
+    output_tp: parseFloat(raw.output_tp ?? raw.input_tp),
+    output_lra: parseFloat(raw.output_lra ?? raw.input_lra),
+    output_thresh: parseFloat(raw.output_thresh ?? raw.input_thresh),
     target_i: -14,
     target_tp: -1,
     target_lra: 7,
     target_thresh: -30,
-    normalization_type: "dynamic",
-    target_offset: 0,
+    normalization_type: raw.normalization_type ?? "dynamic",
+    target_offset: parseFloat(raw.target_offset ?? "0"),
   };
 }
 
