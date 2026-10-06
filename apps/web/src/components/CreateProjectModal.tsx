@@ -14,6 +14,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onClose,
   onCreated,
 }) => {
+  const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [topic, setTopic] = useState("sample");
   const [template, setTemplate] = useState("minimal");
@@ -69,11 +70,37 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Auto sanitize to kebab-case
-    const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-");
-    setSlug(val);
+  const removeVietnameseTones = (str: string) => {
+    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+    str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+    str = str.replace(/đ/g, "d");
+    str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+    str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+    str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+    str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+    str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+    str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+    str = str.replace(/Đ/g, "D");
+    // Remove special chars
+    str = str.replace(/[^a-zA-Z0-9 -]/g, "");
+    return str;
   };
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setTitle(val);
+    const generatedSlug = removeVietnameseTones(val)
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+    setSlug(generatedSlug);
+  };
+
 
   const handleFormatToggle = (fmt: "long-16x9" | "short-9x16") => {
     if (formats.includes(fmt)) {
@@ -90,7 +117,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
     const cleanSlug = slug.trim().replace(/^-+|-+$/g, "");
     if (!cleanSlug) {
-      setErrorMessage("Vui lòng nhập tên slug dự án.");
+      setErrorMessage("Vui lòng nhập tiêu đề để tạo slug.");
       return;
     }
 
@@ -106,6 +133,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
     const payload: CreateProjectPayload = {
       slug: cleanSlug,
+      title: title.trim(),
       topic,
       template,
       minutes: Number(minutes),
@@ -159,20 +187,25 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             </div>
           )}
 
-          {/* Project Slug */}
+          {/* Project Title / Slug */}
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Tên định danh (Slug) <span className="text-rose-400">*</span>
+              Tiêu đề dự án <span className="text-rose-400">*</span>
             </label>
             <input
               type="text"
               required
-              value={slug}
-              onChange={handleSlugChange}
-              placeholder="vi-du: tri-tue-nhan-tao"
-              className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl text-sm text-slate-100 placeholder-slate-500 transition-colors font-mono"
+              value={title}
+              onChange={handleTitleChange}
+              placeholder="VD: Lợi ích uống nước chanh"
+              className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-xl text-sm text-slate-100 placeholder-slate-500 transition-colors"
             />
-            <p className="text-[11px] text-slate-500 mt-1">Dùng làm tên thư mục dự án (chữ thường, gạch ngang).</p>
+            {slug && (
+              <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                <span>ID hệ thống (Slug):</span>
+                <span className="text-brand-300 font-mono bg-brand-950/40 px-1.5 py-0.5 rounded border border-brand-500/20">{slug}</span>
+              </p>
+            )}
           </div>
 
           {/* Topic & Template Grid */}

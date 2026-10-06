@@ -13,6 +13,7 @@ import { runRender } from "./commands/render.js";
 import { runAssets } from "./commands/assets.js";
 import { runShorts } from "./commands/shorts.js";
 import { runQa } from "./commands/qa.js";
+import { runDelete } from "./commands/delete.js";
 import { parseArgs } from "./utils/parse-args.js";
 
 const { command, positionals, flags } = parseArgs(process.argv.slice(2));
@@ -143,11 +144,22 @@ switch (command) {
     break;
   }
 
+  case "delete":
+  case "remove": {
+    const slug = positionals[0];
+    await runDelete({
+      slug,
+      baseDir: typeof flags["base-dir"] === "string" ? flags["base-dir"] : undefined,
+      json: jsonFlag,
+    });
+    break;
+  }
+
   default:
     if (command) {
       console.error(`Unknown command: ${command}`);
     }
     console.log("Usage: studio <command> [options]");
-    console.log("Commands: doctor, new, status, run, validate, assets, shorts, render, qa");
+    console.log("Commands: doctor, new, status, run, validate, assets, shorts, render, qa, delete");
     process.exit(command ? 1 : 0);
 }

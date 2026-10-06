@@ -8,6 +8,7 @@ import {
   readFileSync,
   writeFileSync,
   mkdirSync,
+  createReadStream,
 } from "node:fs";
 import {
   ProjectManager,
@@ -28,6 +29,7 @@ import {
 } from "@faceless/core";
 import { getDuration, measureLoudness } from "@faceless/media";
 import { RemotionRendererAdapter } from "@faceless/renderer-remotion";
+import { generateStageJsonFromPrompt, generateAiAssetImage } from "./ai-helper.js";
 
 export interface CreateAppOptions {
   baseDir?: string;
@@ -179,7 +181,9 @@ export function createApp(options: CreateAppOptions = {}) {
               specExists,
               updatedAt: state?.updatedAt || config?.createdAt,
             });
-          } catch {}
+          } catch (e: any) {
+            console.error("Error parsing project", ent.name, e);
+          }
         }
       }
     }
@@ -190,7 +194,7 @@ export function createApp(options: CreateAppOptions = {}) {
   // POST /projects - Create a new project (studio new)
   app.post("/projects", async (c) => {
     const body = await c.req.json().catch(() => ({}));
-    const { slug, topic, template, minutes, formats, assetBudget, qaThreshold, voice, speed } = body;
+    const { slug, title, topic, template, minutes, formats, assetBudget, qaThreshold, voice, speed } = body;
 
     if (!slug || typeof slug !== "string") {
       return c.json({ success: false, error: "Missing required field: slug" }, 400);
@@ -207,6 +211,7 @@ export function createApp(options: CreateAppOptions = {}) {
     try {
       config = ProjectConfigSchema.parse({
         slug,
+        title,
         topicId: topic || "sample",
         templateId: template || "minimal",
         targetMinutes: minutes ? Number(minutes) : 1,
@@ -264,6 +269,32 @@ export function createApp(options: CreateAppOptions = {}) {
           state,
           specExists,
         },
+      });
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message }, 500);
+    }
+  });
+
+  // DELETE /projects/:slug - Delete a project
+  app.delete("/projects/:slug", (c) => {
+    const slug = c.req.param("slug");
+    if (!slug || !/^[a-zA-Z0-9_-]+$/.test(slug)) {
+      return c.json({ success: false, error: `Invalid project slug: ${slug}` }, 400);
+    }
+
+    const pm = new ProjectManager(baseDir);
+    const projDir = resolve(baseDir, slug);
+
+    if (!existsSync(projDir)) {
+      return c.json({ success: false, error: `Project "${slug}" not found` }, 404);
+    }
+
+    try {
+      pm.deleteProject(slug);
+      return c.json({
+        success: true,
+        message: `Project "${slug}" deleted successfully`,
+        slug,
       });
     } catch (err: any) {
       return c.json({ success: false, error: err.message }, 500);
@@ -343,30 +374,10 @@ export function createApp(options: CreateAppOptions = {}) {
 
     // Deterministic Stage: TTS
     if (targetStage === "tts") {
-      const audioDir = resolve(projDir, "audio");
-      mkdirSync(audioDir, { recursive: true });
-      const narrPath = resolve(audioDir, "narration.wav");
-
-      // Minimal valid 44-byte WAV header (silence)
-      const SILENT_WAV_BASE64 =
-        "UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
-      writeFileSync(narrPath, Buffer.from(SILENT_WAV_BASE64, "base64"));
-
-      if (state.stages.some((s) => s.stage === "tts")) {
-        pm.updateStage(slug, "tts", { status: "done" });
-      }
-      pm.recordEvent(slug, {
-        type: "tts_completed",
-        stage: "tts",
-        audioPath: "audio/narration.wav",
-      });
-
       return c.json({
-        success: true,
-        stage: "tts",
-        status: "done",
-        audioPath: "audio/narration.wav",
-      });
+        success: false,
+        error: "Vui lòng sử dụng giao diện Sinh Audio (TTS) ở Tab 1 [Pipeline Inbox] để cấu hình và sinh giọng đọc.",
+      }, 400);
     }
 
     // Deterministic Stage: Align
@@ -469,6 +480,19 @@ export function createApp(options: CreateAppOptions = {}) {
       });
 
       if (res.success) {
+        // Auto-sync results/004.json or 004-spec.json to root spec.json
+        if (task.stage === "spec" || task.id === "004") {
+          const specCand1 = resolve(projDir, "results", `${task.id}.json`);
+          const specCand2 = resolve(projDir, "results", `${task.id}-spec.json`);
+          const srcSpec = existsSync(specCand1) ? specCand1 : existsSync(specCand2) ? specCand2 : null;
+          if (srcSpec) {
+            try {
+              writeFileSync(resolve(projDir, "spec.json"), readFileSync(srcSpec, "utf-8"), "utf-8");
+            } catch {}
+          }
+        }
+
+        pm.updateStage(slug, task.stage, { status: "done" });
         pm.recordEvent(slug, {
           type: "task_validated",
           stage: task.stage,
@@ -814,6 +838,204 @@ export function createApp(options: CreateAppOptions = {}) {
     return c.json({ success: true, hasErrors: false, content: null });
   });
 
+  // GET /projects/:slug/tasks/:taskId/result - Read existing result JSON if present
+  app.get("/projects/:slug/tasks/:taskId/result", (c) => {
+    const slug = c.req.param("slug");
+    const taskId = c.req.param("taskId");
+    const stage = c.req.query("stage");
+    const projDir = resolve(baseDir, slug);
+
+    if (!existsSync(projDir)) {
+      return c.json({ success: false, error: `Project "${slug}" not found` }, 404);
+    }
+
+    const resultsDir = resolve(projDir, "results");
+    const candidates = [
+      stage ? resolve(resultsDir, `${taskId}-${stage}.json`) : null,
+      resolve(resultsDir, `${taskId}.json`),
+      stage ? resolve(resultsDir, `00${taskId}-${stage}.json`) : null,
+    ].filter(Boolean) as string[];
+
+    for (const p of candidates) {
+      if (existsSync(p)) {
+        try {
+          const content = JSON.parse(readFileSync(p, "utf-8"));
+          return c.json({ success: true, hasResult: true, result: content });
+        } catch {}
+      }
+    }
+
+    return c.json({ success: true, hasResult: false, result: null });
+  });
+
+  // POST /projects/:slug/ai/generate-stage-json - Auto-generate stage JSON from user prompt
+  app.post("/projects/:slug/ai/generate-stage-json", async (c) => {
+    const slug = c.req.param("slug");
+    const body = (await c.req.json().catch(() => ({}))) as {
+      stage?: string;
+      prompt?: string;
+    };
+    const { stage, prompt } = body;
+
+    const projDir = resolve(baseDir, slug);
+    if (!existsSync(projDir)) {
+      return c.json({ success: false, error: `Project "${slug}" not found` }, 404);
+    }
+
+    if (!stage || !prompt) {
+      return c.json({ success: false, error: "Missing required fields: stage, prompt" }, 400);
+    }
+
+    // Read previous results for context
+    const resultsDir = resolve(projDir, "results");
+    const previousResults: Record<string, any> = { slug };
+
+    const stages = ["outline", "script", "direct", "tts", "spec"];
+    for (const st of stages) {
+      const p1 = resolve(resultsDir, `00${stages.indexOf(st) + 1}-${st}.json`);
+      const p2 = resolve(resultsDir, `${st}.json`);
+      if (existsSync(p1)) {
+        try { previousResults[st] = JSON.parse(readFileSync(p1, "utf-8")); } catch {}
+      } else if (existsSync(p2)) {
+        try { previousResults[st] = JSON.parse(readFileSync(p2, "utf-8")); } catch {}
+      }
+    }
+
+    // Get project config
+    const configPath = resolve(projDir, "project.json");
+    let topicId = "psychology";
+    let templateId = "baroque-mono";
+    if (existsSync(configPath)) {
+      try {
+        const conf = JSON.parse(readFileSync(configPath, "utf-8"));
+        topicId = conf.topicId || topicId;
+        templateId = conf.templateId || templateId;
+      } catch {}
+    }
+
+    try {
+      const generated = await generateStageJsonFromPrompt({
+        stage,
+        prompt,
+        topic: topicId,
+        template: templateId,
+        previousResults,
+      });
+
+      return c.json({
+        success: true,
+        stage,
+        generatedJson: generated,
+      });
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message }, 500);
+    }
+  });
+
+  // POST /projects/:slug/assets/generate-ai - Generate AI asset image
+  app.post("/projects/:slug/assets/generate-ai", async (c) => {
+    const slug = c.req.param("slug");
+    const body = (await c.req.json().catch(() => ({}))) as {
+      beatId?: string;
+      prompt?: string;
+    };
+    const { beatId, prompt } = body;
+
+    const projDir = resolve(baseDir, slug);
+    if (!existsSync(projDir)) {
+      return c.json({ success: false, error: `Project "${slug}" not found` }, 404);
+    }
+
+    // Read template from project.json
+    let templateId = "baroque-mono";
+    const configPath = resolve(projDir, "project.json");
+    if (existsSync(configPath)) {
+      try {
+        const conf = JSON.parse(readFileSync(configPath, "utf-8"));
+        templateId = conf.templateId || templateId;
+      } catch {}
+    }
+
+    const targetBeatId = beatId || "b1";
+    const promptText = prompt || `Visual illustration for beat ${targetBeatId} of ${slug}`;
+
+    try {
+      const res = await generateAiAssetImage({
+        slug,
+        beatId: targetBeatId,
+        promptText,
+        templateId,
+        baseDir,
+      });
+
+      return c.json({
+        ...res,
+      });
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message }, 500);
+    }
+  });
+
+  // POST /projects/:slug/assets/generate-ai-all - Generate AI asset images for all beats in spec
+  app.post("/projects/:slug/assets/generate-ai-all", async (c) => {
+    const slug = c.req.param("slug");
+    const projDir = resolve(baseDir, slug);
+    if (!existsSync(projDir)) {
+      return c.json({ success: false, error: `Project "${slug}" not found` }, 404);
+    }
+
+    const specPath = resolve(projDir, "spec.json");
+    if (!existsSync(specPath)) {
+      return c.json({ success: false, error: "spec.json not found" }, 400);
+    }
+
+    let spec: any;
+    try {
+      spec = JSON.parse(readFileSync(specPath, "utf-8"));
+    } catch (e: any) {
+      return c.json({ success: false, error: `Invalid spec.json: ${e.message}` }, 400);
+    }
+
+    const templateId = spec.templateId || "baroque-mono";
+    const beats: Array<{ id: string; prompt: string }> = [];
+
+    (spec.chapters || []).forEach((ch: any) => {
+      (ch.beats || []).forEach((b: any) => {
+        beats.push({
+          id: b.id,
+          prompt: b.visualPrompt || b.directorNote || `Scene illustration for beat ${b.id}`,
+        });
+      });
+    });
+
+    const generated: any[] = [];
+    for (const b of beats) {
+      try {
+        const res = await generateAiAssetImage({
+          slug,
+          beatId: b.id,
+          promptText: b.prompt,
+          templateId,
+          baseDir,
+        });
+        generated.push(res);
+      } catch (e: any) {
+        console.error(`Failed to generate asset for beat ${b.id}:`, e);
+      }
+    }
+
+    const am = new AssetManager(baseDir);
+    const manifest = am.loadManifest(slug);
+
+    return c.json({
+      success: true,
+      generatedCount: generated.length,
+      totalBeats: beats.length,
+      manifest,
+      results: generated,
+    });
+  });
+
   // GET /projects/:slug/assets/export - Export Prompt Pack
   app.get("/projects/:slug/assets/export", (c) => {
     const slug = c.req.param("slug");
@@ -848,6 +1070,278 @@ export function createApp(options: CreateAppOptions = {}) {
     const { imported, count } = am.importAssets(slug);
 
     return c.json({ success: true, count, imported });
+  });
+
+  // POST /projects/:slug/audio/upload - Upload narration audio
+  app.post("/projects/:slug/audio/upload", async (c) => {
+    const slug = c.req.param("slug");
+    const projDir = resolve(baseDir, slug);
+    if (!existsSync(projDir)) {
+      return c.json({ success: false, error: "Project not found" }, 404);
+    }
+
+    try {
+      const body = await c.req.parseBody();
+      const file = body["audio"] as File;
+      if (!file) {
+        return c.json({ success: false, error: "No audio file uploaded" }, 400);
+      }
+
+      const audioDir = resolve(projDir, "audio");
+      mkdirSync(audioDir, { recursive: true });
+      
+      const buffer = await file.arrayBuffer();
+      const narrPath = resolve(audioDir, "narration.wav");
+      writeFileSync(narrPath, Buffer.from(buffer));
+
+      const pm = new ProjectManager(baseDir);
+      pm.updateStage(slug, "tts", { status: "done" });
+      pm.recordEvent(slug, {
+        type: "audio_uploaded",
+        stage: "tts",
+        audioPath: "audio/narration.wav",
+      });
+
+      return c.json({ success: true, message: "Audio uploaded successfully" });
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message }, 500);
+    }
+  });
+
+  // POST /projects/:slug/audio/bgm - Upload background music
+  app.post("/projects/:slug/audio/bgm", async (c) => {
+    const slug = c.req.param("slug");
+    const projDir = resolve(baseDir, slug);
+    if (!existsSync(projDir)) {
+      return c.json({ success: false, error: "Project not found" }, 404);
+    }
+
+    try {
+      const body = await c.req.parseBody();
+      const file = body["audio"] as File;
+      if (!file) {
+        return c.json({ success: false, error: "No audio file uploaded" }, 400);
+      }
+
+      const audioDir = resolve(projDir, "audio");
+      mkdirSync(audioDir, { recursive: true });
+      
+      const buffer = await file.arrayBuffer();
+      const bgmPath = resolve(audioDir, `bgm.mp3`);
+      writeFileSync(bgmPath, Buffer.from(buffer));
+
+      const pm = new ProjectManager(baseDir);
+      pm.recordEvent(slug, {
+        type: "bgm_uploaded",
+        stage: "assets",
+        audioPath: `audio/bgm.mp3`,
+      });
+
+      return c.json({ success: true, message: "BGM uploaded successfully", path: `audio/bgm.mp3` });
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message }, 500);
+    }
+  });
+
+  // POST /projects/:slug/tts/draft - Generate TTS script from previous stages using AI
+  app.post("/projects/:slug/tts/draft", async (c) => {
+    const slug = c.req.param("slug");
+    const projDir = resolve(baseDir, slug);
+    if (!existsSync(projDir)) {
+      return c.json({ success: false, error: "Project not found" }, 404);
+    }
+
+    try {
+      const resultsDir = resolve(projDir, "results");
+      const scriptPath1 = resolve(resultsDir, "002-script.json");
+      const scriptPath2 = resolve(resultsDir, "script.json");
+      const directPath1 = resolve(resultsDir, "003-direct.json");
+      const directPath2 = resolve(resultsDir, "direct.json");
+      
+      const scriptPath = existsSync(scriptPath1) ? scriptPath1 : scriptPath2;
+      const directPath = existsSync(directPath1) ? directPath1 : directPath2;
+      
+      let scriptContent = "";
+      if (existsSync(scriptPath)) {
+        const scriptData = JSON.parse(readFileSync(scriptPath, "utf-8"));
+        scriptContent = scriptData.content || JSON.stringify(scriptData);
+      }
+      
+      let directContent = "";
+      if (existsSync(directPath)) {
+        const directData = JSON.parse(readFileSync(directPath, "utf-8"));
+        directContent = JSON.stringify(directData);
+      }
+
+      const body = (await c.req.json().catch(() => ({}))) as { model?: string };
+      const isGeminiTTS = body.model === "gemini";
+
+      const emotionRules = isGeminiTTS 
+        ? `2. Bạn CẦN chèn thẻ cảm xúc vào văn bản để tăng tính chân thực, kết hợp cả Cảm xúc bao trùm ([...]) và Sự kiện âm thanh (<...>).
+   CÁC THẺ CHO PHÉP (Không dùng thẻ ngoài danh sách này):
+   - Cảm xúc: [enthusiasm] (hào hứng), [sadness] (buồn bã), [anger] (tức giận), [neutral] (bình thường).
+   - Sự kiện: <laugh> (cười), <sigh> (thở dài), <breath> (lấy hơi), <short pause> (ngắt nhịp).
+   Quy tắc:
+   - Thẻ cảm xúc (ngoặc vuông) đặt ở đầu câu để định hình tâm trạng.
+   - Thẻ sự kiện (ngoặc nhọn) đặt giữa hoặc cuối câu để tạo điểm nhấn âm thanh vật lý.
+   - Ví dụ: [enthusiasm] Chào mọi người! <laugh> Hôm nay trời đẹp quá <breath>.`
+        : `2. Bạn có thể chèn thẻ cảm xúc vào văn bản để tăng tính chân thực. TUY NHIÊN, BẠN CHỈ ĐƯỢC PHÉP SỬ DỤNG ĐÚNG 3 THẺ SAU (không bịa thêm thẻ nào khác):
+   - [cười] : Để ở cuối hoặc giữa câu để tạo sự vui vẻ, tươi tắn.
+   - [thở dài] : Để ở đầu hoặc giữa câu biểu thị mệt mỏi, chán nản, luyến tiếc.
+   - [hắng giọng] : Để ở đầu hoặc giữa câu để tạo ngắt quãng tự nhiên (e hèm).
+   Hãy chèn các thẻ này một cách tiết chế và tự nhiên.`;
+
+      const prompt = `
+Bạn là một chuyên gia kịch bản âm thanh (Voiceover Director).
+Dưới đây là kịch bản (Script) và chỉ đạo nghệ thuật (Direct) của một video.
+Nhiệm vụ của bạn: 
+1. Lọc bỏ các tiêu đề phần (Heading), chỉ giữ lại đúng những câu thoại (Voiceover) mà người đọc (AI/người thật) sẽ phát âm.
+${emotionRules}
+3. Không làm thay đổi nội dung chính của lời thoại.
+4. CHỈ TRẢ VỀ nội dung text thuần tuý, KHÔNG CÓ markdown code block, KHÔNG JSON, KHÔNG BÌNH LUẬN.
+
+--- SCRIPT ---
+${scriptContent}
+
+--- DIRECT ---
+${directContent}
+`;
+      
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        // Fallback if no API key
+        return c.json({ success: true, text: scriptContent });
+      }
+
+      const { generateStageJsonFromPrompt } = await import("./ai-helper.js");
+      // Call Gemini directly
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7 }
+          })
+        }
+      );
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Gemini API Error");
+      
+      let generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || scriptContent;
+      // Remove any markdown formatting just in case
+      generatedText = generatedText.replace(/^```.*?$/gm, "").trim();
+
+      return c.json({ success: true, text: generatedText });
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message }, 500);
+    }
+  });
+  // GET /projects/:slug/audio/:filename - Serve audio files
+  app.get("/projects/:slug/audio/:filename", async (c) => {
+    const slug = c.req.param("slug");
+    const filename = c.req.param("filename");
+    const projDir = resolve(baseDir, slug);
+    const audioPath = resolve(projDir, "audio", filename);
+
+    if (!existsSync(audioPath)) {
+      return c.json({ error: "File not found" }, 404);
+    }
+    
+    // Simple streaming
+    const stream = createReadStream(audioPath);
+    const contentType = filename.endsWith(".mp3") ? "audio/mpeg" : "audio/wav";
+    return c.body(stream as any, 200, {
+      "Content-Type": contentType,
+      "Accept-Ranges": "bytes"
+    });
+  });
+
+  // POST /projects/:slug/tts/preview - Generate a short TTS preview
+  app.post("/projects/:slug/tts/preview", async (c) => {
+    const slug = c.req.param("slug");
+    const projDir = resolve(baseDir, slug);
+    if (!existsSync(projDir)) {
+      return c.json({ success: false, error: "Project not found" }, 404);
+    }
+
+    try {
+      const body = (await c.req.json().catch(() => ({}))) as { text?: string; voiceId?: string; model?: string };
+      if (!body.text || body.text.length > 100) {
+        return c.json({ success: false, error: "Missing text or exceeds 100 characters" }, 400);
+      }
+
+      const audioDir = resolve(projDir, "audio");
+      if (!existsSync(audioDir)) mkdirSync(audioDir, { recursive: true });
+      
+      const { generateTTS } = await import("./tts-helper.js");
+      const previewBase = resolve(audioDir, "preview.wav");
+      
+      const { ext } = await generateTTS(body.text, previewBase, body.voiceId || "Thiện Minh", body.model || "auto");
+      const previewFileName = `preview.${ext}`;
+      
+      return c.json({ 
+        success: true, 
+        audioUrl: `http://localhost:3005/projects/${slug}/audio/${previewFileName}?t=${Date.now()}`
+      });
+    } catch (err: any) {
+      console.error(err);
+      return c.json({ success: false, error: err.message }, 500);
+    }
+  });
+
+  // POST /projects/:slug/tts/generate - Generate TTS and SRT from text
+  app.post("/projects/:slug/tts/generate", async (c) => {
+    const slug = c.req.param("slug");
+    const projDir = resolve(baseDir, slug);
+    if (!existsSync(projDir)) {
+      return c.json({ success: false, error: "Project not found" }, 404);
+    }
+
+    try {
+      const body = (await c.req.json().catch(() => ({}))) as { text?: string; voiceId?: string; model?: string };
+      if (!body.text) {
+        return c.json({ success: false, error: "Missing text payload" }, 400);
+      }
+
+      const audioDir = resolve(projDir, "audio");
+      mkdirSync(audioDir, { recursive: true });
+      
+      const { generateTTS, generateSrtAndWords } = await import("./tts-helper.js");
+      const baseNarrPath = resolve(audioDir, "narration.wav"); 
+      const srtPath = resolve(audioDir, "narration.srt");
+      
+      // 1. Generate Audio
+      const { durationSec, ext } = await generateTTS(body.text, baseNarrPath, body.voiceId || "Thiện Minh", body.model || "auto");
+      const audioFileName = `narration.${ext}`;
+      
+      // 2. Generate SRT and Word Timings
+      const { srt, words } = generateSrtAndWords(body.text, durationSec);
+      writeFileSync(srtPath, srt, "utf-8");
+
+      // 3. Save to results/tts.json
+      const resultsDir = resolve(projDir, "results");
+      mkdirSync(resultsDir, { recursive: true });
+      writeFileSync(resolve(resultsDir, "tts.json"), JSON.stringify({
+        audioPath: `audio/${audioFileName}`,
+        durationSec,
+        words
+      }, null, 2));
+
+      const pm = new ProjectManager(baseDir);
+      pm.updateStage(slug, "tts", { status: "done" });
+      pm.recordEvent(slug, {
+        type: "tts_completed",
+        stage: "tts",
+        audioPath: `audio/${audioFileName}`,
+      });
+
+      return c.json({ success: true, durationSec });
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message }, 500);
+    }
   });
 
   // GET /projects/:slug/assets/manifest - Read manifest.json

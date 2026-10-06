@@ -342,9 +342,12 @@ export class QAManager {
     if (options.videoPath) {
       videoPath = resolve(projectDir, options.videoPath);
     } else {
-      // Auto-detect in dist/
+      // Auto-detect in out/ or dist/
+      const projectSlug = resolve(projectDir).split(/[/\\]/).pop() || "";
       const candidates = [
+        resolve(projectDir, "out/long-16x9", `${projectSlug}.mp4`),
         resolve(projectDir, "dist/long-16x9.mp4"),
+        resolve(projectDir, "dist/shorts/spec-short-1.mp4"),
         resolve(projectDir, "dist/shorts/short-1.mp4"),
         resolve(projectDir, "dist/short-9x16.mp4"),
         resolve(projectDir, "dist/video.mp4"),

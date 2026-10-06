@@ -1,0 +1,35 @@
+{
+  "title": "Tạo dàn ý video lịch sử về Bí ẩn Đội quân đất nung của Tần Thủy Hoàng gồm 3 phần:",
+  "points": [
+    "Mở đầu gây tò mò: Tạo dàn ý video lịch sử về Bí ẩn Đội quân đất nung của Tần Thủy Hoàng gồm 3 phần:",
+    "Phân tích cốt lõi & cơ chế hoạt động",
+    "Ví dụ minh họa thực tế dễ hiểu",
+    "Bài học sâu sắc & đúc kết hành động"
+  ],
+  "sections": [
+    {
+      "id": "s1",
+      "name": "Mở đầu hấp dẫn",
+      "purpose": "Gây chú ý ngay trong 3 giây đầu tiên với câu hỏi hoặc nghịch lý",
+      "estimatedSeconds": 15
+    },
+    {
+      "id": "s2",
+      "name": "Phân tích chuyên sâu",
+      "purpose": "Làm rõ bản chất và nguyên nhân vì sao hiện tượng xảy ra",
+      "estimatedSeconds": 25
+    },
+    {
+      "id": "s3",
+      "name": "Ví dụ trực quan",
+      "purpose": "Dẫn chứng sinh động giúp người xem liên hệ bản thân",
+      "estimatedSeconds": 25
+    },
+    {
+      "id": "s4",
+      "name": "Đúc kết & Hành động",
+      "purpose": "Lời khuyên thực tiễn và thông điệp truyền cảm hứng",
+      "estimatedSeconds": 15
+    }
+  ]
+}

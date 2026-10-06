@@ -214,5 +214,23 @@ describe("Web UI Foundation & API Client (@faceless/web)", () => {
       // Render returns error if spec is missing
       await expect(api.render(slug, { spec: "non-existent.json" })).rejects.toThrow();
     });
+
+    it("deleteProject successfully deletes project and verifies removal", async () => {
+      const slug = "web-delete-test-proj";
+      await api.createProject({ slug });
+
+      // Verify project is in list
+      let projects = await api.getProjects();
+      expect(projects.some((p) => p.slug === slug)).toBe(true);
+
+      // Delete project
+      const delRes = await api.deleteProject(slug);
+      expect(delRes.success).toBe(true);
+      expect(delRes.slug).toBe(slug);
+
+      // Verify project is no longer in list
+      projects = await api.getProjects();
+      expect(projects.some((p) => p.slug === slug)).toBe(false);
+    });
   });
 });

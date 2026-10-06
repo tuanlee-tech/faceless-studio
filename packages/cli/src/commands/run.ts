@@ -125,7 +125,9 @@ export async function runRun(options: RunCommandOptions): Promise<void> {
       }
 
       const narrationPath = resolve(audioDir, "narration.wav");
-      writeFileSync(narrationPath, "RIFF mock wav audio data", "utf-8");
+      const SILENT_WAV_BASE64 =
+        "UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+      writeFileSync(narrationPath, Buffer.from(SILENT_WAV_BASE64, "base64"));
 
       if (state.stages.some((s) => s.stage === "tts")) {
         pm.updateStage(slug, "tts", { status: "done" });

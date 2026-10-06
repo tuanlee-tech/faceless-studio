@@ -1,4 +1,4 @@
-import { writeFileSync, appendFileSync, mkdirSync, existsSync, readFileSync } from "node:fs";
+import { writeFileSync, appendFileSync, mkdirSync, existsSync, readFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { Schema, z } from "zod";
 import yaml from "js-yaml";
@@ -53,7 +53,7 @@ export class ProjectManager {
     writeFileSync(resolve(projectDir, "project.json"), JSON.stringify(projectConfigSanitized, null, 2));
 
     // Initialize state.json with pending stages
-    const pipelineStages = ["outline", "script", "direct", "spec"];
+    const pipelineStages = ["outline", "script", "direct", "tts", "spec"];
     const formatStages = projectConfigSanitized.formats;
     const allStages = [...pipelineStages, ...formatStages];
 
@@ -127,5 +127,25 @@ export class ProjectManager {
       stage,
       status: updatedStage.status,
     });
+  }
+
+  deleteProject(slug: string): void {
+    if (!slug || typeof slug !== "string" || !/^[a-zA-Z0-9_-]+$/.test(slug)) {
+      throw new Error(`Invalid project slug: ${slug}`);
+    }
+
+    const projectDir = resolve(this.baseDir, slug);
+    const baseResolved = resolve(this.baseDir);
+
+    // Prevent directory traversal
+    if (!projectDir.startsWith(baseResolved)) {
+      throw new Error(`Forbidden project path traversal: ${slug}`);
+    }
+
+    if (!existsSync(projectDir)) {
+      throw new Error(`Project ${slug} not found`);
+    }
+
+    rmSync(projectDir, { recursive: true, force: true });
   }
 }

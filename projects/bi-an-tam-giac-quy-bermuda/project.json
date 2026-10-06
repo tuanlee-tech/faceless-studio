@@ -1,0 +1,15 @@
+{
+  "slug": "bi-an-tam-giac-quy-bermuda",
+  "title": "Bí ẩn tam giác quỷ Bermuda",
+  "topicId": "history",
+  "templateId": "baroque-mono",
+  "targetMinutes": 1,
+  "formats": [
+    "long-16x9"
+  ],
+  "assetBudget": 50,
+  "qaThreshold": 70,
+  "voice": "default",
+  "speed": 1,
+  "createdAt": "2026-10-06T05:53:08.843Z"
+}

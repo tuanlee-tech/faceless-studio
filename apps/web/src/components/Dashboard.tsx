@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Search, Filter, FolderPlus, Film, CheckCircle2, Clock } from "lucide-react";
+import { Search, Filter, FolderPlus, Film, CheckCircle2, Clock, Trash2, AlertTriangle } from "lucide-react";
 import { ProjectCard } from "./ProjectCard.js";
 import type { ProjectSummary } from "../types/index.js";
 
@@ -8,6 +8,7 @@ interface DashboardProps {
   isLoading: boolean;
   onSelectProject: (slug: string) => void;
   onNewProject: () => void;
+  onDeleteProject?: (slug: string) => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -15,9 +16,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
   isLoading,
   onSelectProject,
   onNewProject,
+  onDeleteProject,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTopic, setSelectedTopic] = useState<string>("all");
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
   // Metrics calculation
   const metrics = useMemo(() => {
@@ -144,7 +147,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
       ) : filteredProjects.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredProjects.map((p) => (
-            <ProjectCard key={p.slug} project={p} onSelect={onSelectProject} />
+            <ProjectCard
+              key={p.slug}
+              project={p}
+              onSelect={onSelectProject}
+              onDelete={onDeleteProject ? (slug) => setProjectToDelete(slug) : undefined}
+            />
           ))}
         </div>
       ) : (
@@ -170,6 +178,50 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <span>Tạo dự án mới ngay</span>
             </button>
           )}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {projectToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Xác nhận xóa dự án</h3>
+                <p className="text-xs text-slate-400">Hành động này không thể hoàn tác</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Bạn có chắc chắn muốn xóa vĩnh viễn dự án <strong className="text-white font-mono">{projectToDelete}</strong>?
+              Toàn bộ kịch bản, âm thanh TTS, tài nguyên và video đã render sẽ bị xóa sạch khỏi hệ thống.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setProjectToDelete(null)}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border border-slate-800"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const slug = projectToDelete;
+                  setProjectToDelete(null);
+                  onDeleteProject?.(slug);
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Xác nhận xóa</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

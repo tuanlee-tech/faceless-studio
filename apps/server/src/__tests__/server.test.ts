@@ -364,5 +364,127 @@ describe("API Server (@faceless/server)", () => {
       expect(bodyText).toContain("event: log");
       expect(bodyText).toContain("project_created");
     });
+
+    it("DELETE /projects/:slug deletes project and returns 200", async () => {
+      // First create a dedicated project to delete
+      const createRes = await app.request("/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: "proj-to-delete" }),
+      });
+      expect(createRes.status).toBe(201);
+      expect(existsSync(resolve(TEST_BASE, "proj-to-delete"))).toBe(true);
+
+      const delRes = await app.request("/projects/proj-to-delete", {
+        method: "DELETE",
+      });
+      expect(delRes.status).toBe(200);
+      const delData = await delRes.json();
+      expect(delData.success).toBe(true);
+      expect(delData.slug).toBe("proj-to-delete");
+      expect(existsSync(resolve(TEST_BASE, "proj-to-delete"))).toBe(false);
+    });
+
+    it("DELETE /projects/:slug returns 404 for non-existent project", async () => {
+      const res = await app.request("/projects/non-existent-proj", {
+        method: "DELETE",
+      });
+      expect(res.status).toBe(404);
+      const data = await res.json();
+      expect(data.success).toBe(false);
+      expect(data.error).toContain("not found");
+    });
+
+    it("DELETE /projects/:slug returns 400 for invalid slug", async () => {
+      const res = await app.request("/projects/invalid%20slug!", {
+        method: "DELETE",
+      });
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.success).toBe(false);
+    });
+  });
+
+  describe("AI Assistant & Asset Generation Endpoints", () => {
+    it("POST /projects/:slug/ai/generate-stage-json produces valid schema JSON from prompt", async () => {
+      await app.request("/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: "ai-test-proj" }),
+      });
+
+      const res = await app.request("/projects/ai-test-proj/ai/generate-stage-json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stage: "outline",
+          prompt: "Hiệu ứng Dunning-Kruger trong tâm lý học",
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.stage).toBe("outline");
+      expect(data.generatedJson).toBeDefined();
+      expect(data.generatedJson.title).toBeDefined();
+      expect(Array.isArray(data.generatedJson.sections)).toBe(true);
+    });
+
+    it("GET /projects/:slug/tasks/:taskId/result fetches saved result or returns hasResult: false", async () => {
+      await app.request("/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: "res-test-proj" }),
+      });
+
+      // Initially no result exists
+      const getRes1 = await app.request("/projects/res-test-proj/tasks/001/result?stage=outline");
+      expect(getRes1.status).toBe(200);
+      const data1 = await getRes1.json();
+      expect(data1.hasResult).toBe(false);
+
+      // Save a result
+      const saveRes = await app.request("/projects/res-test-proj/tasks/001/result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          result: { title: "Custom Title", sections: [] },
+          stage: "outline",
+        }),
+      });
+      expect(saveRes.status).toBe(200);
+
+      // Now it exists
+      const getRes2 = await app.request("/projects/res-test-proj/tasks/001/result?stage=outline");
+      expect(getRes2.status).toBe(200);
+      const data2 = await getRes2.json();
+      expect(data2.hasResult).toBe(true);
+      expect(data2.result.title).toBe("Custom Title");
+    });
+
+    it("POST /projects/:slug/assets/generate-ai creates asset image file and manifest entry", async () => {
+      await app.request("/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: "asset-test-proj" }),
+      });
+
+      const res = await app.request("/projects/asset-test-proj/assets/generate-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          beatId: "b1",
+          prompt: "Dramatic monochrome landscape",
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.beatId).toBe("b1");
+      expect(existsSync(resolve(TEST_BASE, "asset-test-proj", "assets/processed/b1.png"))).toBe(true);
+    });
   });
 });
+

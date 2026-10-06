@@ -150,4 +150,32 @@ describe("ProjectManager", () => {
       formats: ["long-16x9"],
     })).toThrow(`Project ${slug} already exists`);
   });
+
+  it("deleteProject removes project directory and all contents", () => {
+    const slug = "test-project-del-01";
+    pm.createProject(slug, {
+      slug,
+      topicId: "test",
+      templateId: "minimal",
+      targetMinutes: 5,
+      formats: ["long-16x9"],
+    });
+
+    const projectDir = path.join(TEST_BASE, slug);
+    expect(fs.existsSync(projectDir)).toBe(true);
+
+    pm.deleteProject(slug);
+    expect(fs.existsSync(projectDir)).toBe(false);
+  });
+
+  it("deleteProject throws if project not found", () => {
+    expect(() => pm.deleteProject("non-existent-project")).toThrow(
+      "Project non-existent-project not found"
+    );
+  });
+
+  it("deleteProject throws for invalid slug or path traversal", () => {
+    expect(() => pm.deleteProject("../evil")).toThrow("Invalid project slug: ../evil");
+    expect(() => pm.deleteProject("slug with space")).toThrow("Invalid project slug: slug with space");
+  });
 });

@@ -62,6 +62,7 @@ export const BeatSchema = z.object({
   sfx: z.array(SfxSchema).default([]),
   /** Ghi chú đạo diễn (cho agent/người dùng). */
   directorNote: z.string().optional(),
+  visualPrompt: z.string().optional(),
 });
 
 export const ChapterSchema = z.object({

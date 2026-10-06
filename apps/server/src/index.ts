@@ -1,7 +1,8 @@
+import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { createApp } from "./app.js";
 
-const PORT = Number(process.env.PORT) || 3001;
+const PORT = Number(process.env.PORT) || 3005;
 const baseDir = process.env.STUDIO_BASE_DIR || "projects";
 
 const app = createApp({ baseDir });

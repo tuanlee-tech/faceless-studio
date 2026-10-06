@@ -1,0 +1,59 @@
+{
+  "styleLock": "Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain",
+  "beats": [
+    {
+      "id": "b1",
+      "layout": "title-card",
+      "durationHint": "medium",
+      "cameraMotion": "slow-zoom-in",
+      "directorNote": "Mở đầu: Bạn có bao giờ tự hỏi: vì sao tạo dàn ý video lịch sử về bí ",
+      "visualPrompt": "A cinematic hook moment establishing the concept of Mở đầu, mysterious atmosphere, single subject in thought. Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain. cinematic wide shot, 35mm anamorphic lens, f/1.8, shallow depth of field, hyper-detailed texture, 8k resolution"
+    },
+    {
+      "id": "b2",
+      "layout": "split-left",
+      "durationHint": "long",
+      "cameraMotion": "pan-right",
+      "directorNote": "Bản chất vấn đề: Trong thực tế, hầu hết chúng ta đều từng trải qua điều này m",
+      "visualPrompt": "A revealing close-up showing the internal mechanisms and abstract patterns related to Bản chất vấn đề, scholarly and analytical atmosphere. Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain. cinematic wide shot, 35mm anamorphic lens, f/1.8, shallow depth of field, hyper-detailed texture, 8k resolution"
+    },
+    {
+      "id": "b3",
+      "layout": "center-text",
+      "durationHint": "long",
+      "cameraMotion": "subtle-drift",
+      "directorNote": "Góc nhìn sâu sắc: Khi hiểu được quy luật ẩn giấu phía sau, bạn sẽ có một lăng ",
+      "visualPrompt": "A revealing close-up showing the internal mechanisms and abstract patterns related to Góc nhìn sâu sắc, scholarly and analytical atmosphere. Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain. cinematic wide shot, 35mm anamorphic lens, f/1.8, shallow depth of field, hyper-detailed texture, 8k resolution"
+    },
+    {
+      "id": "b4",
+      "layout": "split-right",
+      "durationHint": "medium",
+      "cameraMotion": "subtle-drift",
+      "directorNote": "Đúc kết: Sự thông tuệ bắt đầu từ việc thấu hiểu chính mình và không n",
+      "visualPrompt": "A serene resolution scene representing Đúc kết, dawn light illuminating a path forward, feeling of clarity. Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain. cinematic wide shot, 35mm anamorphic lens, f/1.8, shallow depth of field, hyper-detailed texture, 8k resolution"
+    }
+  ],
+  "visuals": [
+    {
+      "id": "b1",
+      "prompt": "A cinematic hook moment establishing the concept of Mở đầu, mysterious atmosphere, single subject in thought. Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain. cinematic wide shot, 35mm anamorphic lens, f/1.8, shallow depth of field, hyper-detailed texture, 8k resolution",
+      "aspectRatio": "16:9"
+    },
+    {
+      "id": "b2",
+      "prompt": "A revealing close-up showing the internal mechanisms and abstract patterns related to Bản chất vấn đề, scholarly and analytical atmosphere. Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain. cinematic wide shot, 35mm anamorphic lens, f/1.8, shallow depth of field, hyper-detailed texture, 8k resolution",
+      "aspectRatio": "16:9"
+    },
+    {
+      "id": "b3",
+      "prompt": "A revealing close-up showing the internal mechanisms and abstract patterns related to Góc nhìn sâu sắc, scholarly and analytical atmosphere. Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain. cinematic wide shot, 35mm anamorphic lens, f/1.8, shallow depth of field, hyper-detailed texture, 8k resolution",
+      "aspectRatio": "16:9"
+    },
+    {
+      "id": "b4",
+      "prompt": "A serene resolution scene representing Đúc kết, dawn light illuminating a path forward, feeling of clarity. Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain. cinematic wide shot, 35mm anamorphic lens, f/1.8, shallow depth of field, hyper-detailed texture, 8k resolution",
+      "aspectRatio": "16:9"
+    }
+  ]
+}

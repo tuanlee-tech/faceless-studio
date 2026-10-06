@@ -7,7 +7,7 @@ import type {
   CreateProjectPayload,
 } from "../types/index.js";
 
-const API_BASE = import.meta.env?.VITE_API_BASE_URL || "http://localhost:3001";
+const API_BASE = import.meta.env?.VITE_API_BASE_URL || "http://localhost:3005";
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
@@ -82,6 +82,17 @@ export const api = {
     });
   },
 
+  async deleteProject(slug: string): Promise<{
+    success: boolean;
+    message?: string;
+    slug?: string;
+    error?: string;
+  }> {
+    return request(`/projects/${slug}`, {
+      method: "DELETE",
+    });
+  },
+
   async runStage(slug: string, stage?: string): Promise<{
     success: boolean;
     stage: string;
@@ -145,6 +156,31 @@ export const api = {
     return request(`/projects/${slug}/tasks/${taskId}/result`, {
       method: "POST",
       body: JSON.stringify({ result, stage }),
+    });
+  },
+
+  async getTaskResult(slug: string, taskId: string, stage?: string): Promise<{ success: boolean; hasResult: boolean; result: any }> {
+    const q = stage ? `?stage=${encodeURIComponent(stage)}` : "";
+    return request(`/projects/${slug}/tasks/${taskId}/result${q}`);
+  },
+
+  async generateStageJson(slug: string, stage: string, prompt: string): Promise<{ success: boolean; stage: string; generatedJson: any }> {
+    return request(`/projects/${slug}/ai/generate-stage-json`, {
+      method: "POST",
+      body: JSON.stringify({ stage, prompt }),
+    });
+  },
+
+  async generateAiAsset(slug: string, beatId?: string, prompt?: string): Promise<{ success: boolean; beatId: string; imagePath: string; source: string; manifest: any }> {
+    return request(`/projects/${slug}/assets/generate-ai`, {
+      method: "POST",
+      body: JSON.stringify({ beatId, prompt }),
+    });
+  },
+
+  async generateAllAiAssets(slug: string): Promise<{ success: boolean; generatedCount: number; totalBeats: number; manifest: any; results: any[] }> {
+    return request(`/projects/${slug}/assets/generate-ai-all`, {
+      method: "POST",
     });
   },
 

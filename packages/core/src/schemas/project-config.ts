@@ -5,6 +5,8 @@ export const FormatIdSchema = z.enum(["long-16x9", "short-9x16"]);
 export const ProjectConfigSchema = z.object({
   /** Slug duy nhất, dùng làm tên thư mục. */
   slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  /** Tiêu đề dự án (hiển thị UI) */
+  title: z.string().optional(),
   topicId: z.string(),
   templateId: z.string(),
   /** Thời lượng mục tiêu (phút). */

@@ -1,0 +1,847 @@
+{
+  "specVersion": "0.1.0",
+  "projectSlug": "bi-an-tam-giac-quy-bermuda",
+  "topicId": "history",
+  "templateId": "baroque-mono",
+  "fps": 30,
+  "narration": {
+    "audioPath": "audio/narration.wav",
+    "durationSec": 31,
+    "words": [
+      {
+        "id": "w1",
+        "text": "Bạn",
+        "startSec": 0,
+        "endSec": 0.3,
+        "confidence": 0.98
+      },
+      {
+        "id": "w2",
+        "text": "có",
+        "startSec": 0.3,
+        "endSec": 0.6,
+        "confidence": 0.98
+      },
+      {
+        "id": "w3",
+        "text": "bao",
+        "startSec": 0.6,
+        "endSec": 0.9,
+        "confidence": 0.98
+      },
+      {
+        "id": "w4",
+        "text": "giờ",
+        "startSec": 0.9,
+        "endSec": 1.2,
+        "confidence": 0.98
+      },
+      {
+        "id": "w5",
+        "text": "tự",
+        "startSec": 1.2,
+        "endSec": 1.5,
+        "confidence": 0.98
+      },
+      {
+        "id": "w6",
+        "text": "hỏi:",
+        "startSec": 1.5,
+        "endSec": 1.82,
+        "confidence": 0.98
+      },
+      {
+        "id": "w7",
+        "text": "vì",
+        "startSec": 1.82,
+        "endSec": 2.12,
+        "confidence": 0.98
+      },
+      {
+        "id": "w8",
+        "text": "sao",
+        "startSec": 2.12,
+        "endSec": 2.42,
+        "confidence": 0.98
+      },
+      {
+        "id": "w9",
+        "text": "lên",
+        "startSec": 2.42,
+        "endSec": 2.72,
+        "confidence": 0.98
+      },
+      {
+        "id": "w10",
+        "text": "dàn",
+        "startSec": 2.72,
+        "endSec": 3.02,
+        "confidence": 0.98
+      },
+      {
+        "id": "w11",
+        "text": "ý",
+        "startSec": 3.02,
+        "endSec": 3.32,
+        "confidence": 0.98
+      },
+      {
+        "id": "w12",
+        "text": "video",
+        "startSec": 3.32,
+        "endSec": 3.72,
+        "confidence": 0.98
+      },
+      {
+        "id": "w13",
+        "text": "3",
+        "startSec": 3.72,
+        "endSec": 4.02,
+        "confidence": 0.98
+      },
+      {
+        "id": "w14",
+        "text": "phần",
+        "startSec": 4.02,
+        "endSec": 4.34,
+        "confidence": 0.98
+      },
+      {
+        "id": "w15",
+        "text": "về",
+        "startSec": 4.34,
+        "endSec": 4.64,
+        "confidence": 0.98
+      },
+      {
+        "id": "w16",
+        "text": "bí",
+        "startSec": 4.64,
+        "endSec": 4.94,
+        "confidence": 0.98
+      },
+      {
+        "id": "w17",
+        "text": "ẩn",
+        "startSec": 4.94,
+        "endSec": 5.24,
+        "confidence": 0.98
+      },
+      {
+        "id": "w18",
+        "text": "tam",
+        "startSec": 5.24,
+        "endSec": 5.54,
+        "confidence": 0.98
+      },
+      {
+        "id": "w19",
+        "text": "giác",
+        "startSec": 5.54,
+        "endSec": 5.86,
+        "confidence": 0.98
+      },
+      {
+        "id": "w20",
+        "text": "quỷ,",
+        "startSec": 5.86,
+        "endSec": 6.18,
+        "confidence": 0.98
+      },
+      {
+        "id": "w21",
+        "text": "phong",
+        "startSec": 6.18,
+        "endSec": 6.58,
+        "confidence": 0.98
+      },
+      {
+        "id": "w22",
+        "text": "cách",
+        "startSec": 6.58,
+        "endSec": 6.9,
+        "confidence": 0.98
+      },
+      {
+        "id": "w23",
+        "text": "ly",
+        "startSec": 6.9,
+        "endSec": 7.2,
+        "confidence": 0.98
+      },
+      {
+        "id": "w24",
+        "text": "kỳ",
+        "startSec": 7.2,
+        "endSec": 7.5,
+        "confidence": 0.98
+      },
+      {
+        "id": "w25",
+        "text": "lại",
+        "startSec": 7.5,
+        "endSec": 7.8,
+        "confidence": 0.98
+      },
+      {
+        "id": "w26",
+        "text": "có",
+        "startSec": 7.8,
+        "endSec": 8.1,
+        "confidence": 0.98
+      },
+      {
+        "id": "w27",
+        "text": "sức",
+        "startSec": 8.1,
+        "endSec": 8.4,
+        "confidence": 0.98
+      },
+      {
+        "id": "w28",
+        "text": "ảnh",
+        "startSec": 8.4,
+        "endSec": 8.7,
+        "confidence": 0.98
+      },
+      {
+        "id": "w29",
+        "text": "hưởng",
+        "startSec": 8.7,
+        "endSec": 9.1,
+        "confidence": 0.98
+      },
+      {
+        "id": "w30",
+        "text": "mạnh",
+        "startSec": 9.1,
+        "endSec": 9.42,
+        "confidence": 0.98
+      },
+      {
+        "id": "w31",
+        "text": "mẽ",
+        "startSec": 9.42,
+        "endSec": 9.72,
+        "confidence": 0.98
+      },
+      {
+        "id": "w32",
+        "text": "đến",
+        "startSec": 9.72,
+        "endSec": 10.02,
+        "confidence": 0.98
+      },
+      {
+        "id": "w33",
+        "text": "cuộc",
+        "startSec": 10.02,
+        "endSec": 10.34,
+        "confidence": 0.98
+      },
+      {
+        "id": "w34",
+        "text": "sống",
+        "startSec": 10.34,
+        "endSec": 10.66,
+        "confidence": 0.98
+      },
+      {
+        "id": "w35",
+        "text": "của",
+        "startSec": 10.66,
+        "endSec": 10.96,
+        "confidence": 0.98
+      },
+      {
+        "id": "w36",
+        "text": "chúng",
+        "startSec": 10.96,
+        "endSec": 11.36,
+        "confidence": 0.98
+      },
+      {
+        "id": "w37",
+        "text": "ta?",
+        "startSec": 11.36,
+        "endSec": 11.66,
+        "confidence": 0.98
+      },
+      {
+        "id": "w38",
+        "text": "Trong",
+        "startSec": 11.66,
+        "endSec": 12.06,
+        "confidence": 0.98
+      },
+      {
+        "id": "w39",
+        "text": "thực",
+        "startSec": 12.06,
+        "endSec": 12.38,
+        "confidence": 0.98
+      },
+      {
+        "id": "w40",
+        "text": "tế,",
+        "startSec": 12.38,
+        "endSec": 12.68,
+        "confidence": 0.98
+      },
+      {
+        "id": "w41",
+        "text": "hầu",
+        "startSec": 12.68,
+        "endSec": 12.98,
+        "confidence": 0.98
+      },
+      {
+        "id": "w42",
+        "text": "hết",
+        "startSec": 12.98,
+        "endSec": 13.28,
+        "confidence": 0.98
+      },
+      {
+        "id": "w43",
+        "text": "chúng",
+        "startSec": 13.28,
+        "endSec": 13.68,
+        "confidence": 0.98
+      },
+      {
+        "id": "w44",
+        "text": "ta",
+        "startSec": 13.68,
+        "endSec": 13.98,
+        "confidence": 0.98
+      },
+      {
+        "id": "w45",
+        "text": "đều",
+        "startSec": 13.98,
+        "endSec": 14.28,
+        "confidence": 0.98
+      },
+      {
+        "id": "w46",
+        "text": "từng",
+        "startSec": 14.28,
+        "endSec": 14.6,
+        "confidence": 0.98
+      },
+      {
+        "id": "w47",
+        "text": "trải",
+        "startSec": 14.6,
+        "endSec": 14.92,
+        "confidence": 0.98
+      },
+      {
+        "id": "w48",
+        "text": "qua",
+        "startSec": 14.92,
+        "endSec": 15.22,
+        "confidence": 0.98
+      },
+      {
+        "id": "w49",
+        "text": "cảm",
+        "startSec": 15.22,
+        "endSec": 15.52,
+        "confidence": 0.98
+      },
+      {
+        "id": "w50",
+        "text": "giác",
+        "startSec": 15.52,
+        "endSec": 15.84,
+        "confidence": 0.98
+      },
+      {
+        "id": "w51",
+        "text": "này",
+        "startSec": 15.84,
+        "endSec": 16.14,
+        "confidence": 0.98
+      },
+      {
+        "id": "w52",
+        "text": "mà",
+        "startSec": 16.14,
+        "endSec": 16.44,
+        "confidence": 0.98
+      },
+      {
+        "id": "w53",
+        "text": "không",
+        "startSec": 16.44,
+        "endSec": 16.84,
+        "confidence": 0.98
+      },
+      {
+        "id": "w54",
+        "text": "hề",
+        "startSec": 16.84,
+        "endSec": 17.14,
+        "confidence": 0.98
+      },
+      {
+        "id": "w55",
+        "text": "nhận",
+        "startSec": 17.14,
+        "endSec": 17.46,
+        "confidence": 0.98
+      },
+      {
+        "id": "w56",
+        "text": "ra.",
+        "startSec": 17.46,
+        "endSec": 17.76,
+        "confidence": 0.98
+      },
+      {
+        "id": "w57",
+        "text": "Khi",
+        "startSec": 17.76,
+        "endSec": 18.06,
+        "confidence": 0.98
+      },
+      {
+        "id": "w58",
+        "text": "hiểu",
+        "startSec": 18.06,
+        "endSec": 18.38,
+        "confidence": 0.98
+      },
+      {
+        "id": "w59",
+        "text": "được",
+        "startSec": 18.38,
+        "endSec": 18.7,
+        "confidence": 0.98
+      },
+      {
+        "id": "w60",
+        "text": "bản",
+        "startSec": 18.7,
+        "endSec": 19,
+        "confidence": 0.98
+      },
+      {
+        "id": "w61",
+        "text": "chất",
+        "startSec": 19,
+        "endSec": 19.32,
+        "confidence": 0.98
+      },
+      {
+        "id": "w62",
+        "text": "của",
+        "startSec": 19.32,
+        "endSec": 19.62,
+        "confidence": 0.98
+      },
+      {
+        "id": "w63",
+        "text": "vấn",
+        "startSec": 19.62,
+        "endSec": 19.92,
+        "confidence": 0.98
+      },
+      {
+        "id": "w64",
+        "text": "đề,",
+        "startSec": 19.92,
+        "endSec": 20.22,
+        "confidence": 0.98
+      },
+      {
+        "id": "w65",
+        "text": "bạn",
+        "startSec": 20.22,
+        "endSec": 20.52,
+        "confidence": 0.98
+      },
+      {
+        "id": "w66",
+        "text": "sẽ",
+        "startSec": 20.52,
+        "endSec": 20.82,
+        "confidence": 0.98
+      },
+      {
+        "id": "w67",
+        "text": "có",
+        "startSec": 20.82,
+        "endSec": 21.12,
+        "confidence": 0.98
+      },
+      {
+        "id": "w68",
+        "text": "một",
+        "startSec": 21.12,
+        "endSec": 21.42,
+        "confidence": 0.98
+      },
+      {
+        "id": "w69",
+        "text": "góc",
+        "startSec": 21.42,
+        "endSec": 21.72,
+        "confidence": 0.98
+      },
+      {
+        "id": "w70",
+        "text": "nhìn",
+        "startSec": 21.72,
+        "endSec": 22.04,
+        "confidence": 0.98
+      },
+      {
+        "id": "w71",
+        "text": "hoàn",
+        "startSec": 22.04,
+        "endSec": 22.36,
+        "confidence": 0.98
+      },
+      {
+        "id": "w72",
+        "text": "toàn",
+        "startSec": 22.36,
+        "endSec": 22.68,
+        "confidence": 0.98
+      },
+      {
+        "id": "w73",
+        "text": "mới.",
+        "startSec": 22.68,
+        "endSec": 23,
+        "confidence": 0.98
+      },
+      {
+        "id": "w74",
+        "text": "Hãy",
+        "startSec": 23,
+        "endSec": 23.3,
+        "confidence": 0.98
+      },
+      {
+        "id": "w75",
+        "text": "nhớ",
+        "startSec": 23.3,
+        "endSec": 23.6,
+        "confidence": 0.98
+      },
+      {
+        "id": "w76",
+        "text": "rằng,",
+        "startSec": 23.6,
+        "endSec": 24,
+        "confidence": 0.98
+      },
+      {
+        "id": "w77",
+        "text": "sự",
+        "startSec": 24,
+        "endSec": 24.3,
+        "confidence": 0.98
+      },
+      {
+        "id": "w78",
+        "text": "thông",
+        "startSec": 24.3,
+        "endSec": 24.7,
+        "confidence": 0.98
+      },
+      {
+        "id": "w79",
+        "text": "tuệ",
+        "startSec": 24.7,
+        "endSec": 25,
+        "confidence": 0.98
+      },
+      {
+        "id": "w80",
+        "text": "bắt",
+        "startSec": 25,
+        "endSec": 25.3,
+        "confidence": 0.98
+      },
+      {
+        "id": "w81",
+        "text": "đầu",
+        "startSec": 25.3,
+        "endSec": 25.6,
+        "confidence": 0.98
+      },
+      {
+        "id": "w82",
+        "text": "từ",
+        "startSec": 25.6,
+        "endSec": 25.9,
+        "confidence": 0.98
+      },
+      {
+        "id": "w83",
+        "text": "việc",
+        "startSec": 25.9,
+        "endSec": 26.22,
+        "confidence": 0.98
+      },
+      {
+        "id": "w84",
+        "text": "thấu",
+        "startSec": 26.22,
+        "endSec": 26.54,
+        "confidence": 0.98
+      },
+      {
+        "id": "w85",
+        "text": "hiểu",
+        "startSec": 26.54,
+        "endSec": 26.86,
+        "confidence": 0.98
+      },
+      {
+        "id": "w86",
+        "text": "chính",
+        "startSec": 26.86,
+        "endSec": 27.26,
+        "confidence": 0.98
+      },
+      {
+        "id": "w87",
+        "text": "mình",
+        "startSec": 27.26,
+        "endSec": 27.58,
+        "confidence": 0.98
+      },
+      {
+        "id": "w88",
+        "text": "và",
+        "startSec": 27.58,
+        "endSec": 27.88,
+        "confidence": 0.98
+      },
+      {
+        "id": "w89",
+        "text": "không",
+        "startSec": 27.88,
+        "endSec": 28.28,
+        "confidence": 0.98
+      },
+      {
+        "id": "w90",
+        "text": "ngừng",
+        "startSec": 28.28,
+        "endSec": 28.68,
+        "confidence": 0.98
+      },
+      {
+        "id": "w91",
+        "text": "học",
+        "startSec": 28.68,
+        "endSec": 28.98,
+        "confidence": 0.98
+      },
+      {
+        "id": "w92",
+        "text": "hỏi",
+        "startSec": 28.98,
+        "endSec": 29.28,
+        "confidence": 0.98
+      },
+      {
+        "id": "w93",
+        "text": "mỗi",
+        "startSec": 29.28,
+        "endSec": 29.58,
+        "confidence": 0.98
+      },
+      {
+        "id": "w94",
+        "text": "ngày.",
+        "startSec": 29.58,
+        "endSec": 29.98,
+        "confidence": 0.98
+      }
+    ]
+  },
+  "chapters": [
+    {
+      "id": "c1",
+      "title": "Tổng hợp thành spec hoàn chỉnh",
+      "short_candidate": true,
+      "beats": [
+        {
+          "id": "b1",
+          "range": {
+            "startWordId": "w1",
+            "endWordId": "w24"
+          },
+          "layout": "title-card",
+          "directorNote": "Mở đầu: Bạn có bao giờ tự hỏi: vì sao lên dàn ý video 3 phần về bí ẩ",
+          "visualPrompt": "A cinematic hook moment establishing the concept of Mở đầu, mysterious atmosphere, single subject in thought. Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain. cinematic wide shot, 35mm anamorphic lens, f/1.8, shallow depth of field, hyper-detailed texture, 8k resolution",
+          "captions": [
+            {
+              "id": "cap1",
+              "wordIds": [
+                "w1",
+                "w2",
+                "w3",
+                "w4",
+                "w5",
+                "w6",
+                "w7",
+                "w8",
+                "w9",
+                "w10",
+                "w11",
+                "w12",
+                "w13",
+                "w14",
+                "w15",
+                "w16",
+                "w17",
+                "w18",
+                "w19",
+                "w20",
+                "w21",
+                "w22",
+                "w23",
+                "w24"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "b2",
+          "range": {
+            "startWordId": "w25",
+            "endWordId": "w48"
+          },
+          "layout": "split-left",
+          "directorNote": "Bản chất vấn đề: Trong thực tế, hầu hết chúng ta đều từng trải qua điều này m",
+          "visualPrompt": "A revealing close-up showing the internal mechanisms and abstract patterns related to Bản chất vấn đề, scholarly and analytical atmosphere. Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain. cinematic wide shot, 35mm anamorphic lens, f/1.8, shallow depth of field, hyper-detailed texture, 8k resolution",
+          "captions": [
+            {
+              "id": "cap2",
+              "wordIds": [
+                "w25",
+                "w26",
+                "w27",
+                "w28",
+                "w29",
+                "w30",
+                "w31",
+                "w32",
+                "w33",
+                "w34",
+                "w35",
+                "w36",
+                "w37",
+                "w38",
+                "w39",
+                "w40",
+                "w41",
+                "w42",
+                "w43",
+                "w44",
+                "w45",
+                "w46",
+                "w47",
+                "w48"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "b3",
+          "range": {
+            "startWordId": "w49",
+            "endWordId": "w72"
+          },
+          "layout": "center-text",
+          "directorNote": "Góc nhìn sâu sắc: Khi hiểu được quy luật ẩn giấu phía sau, bạn sẽ có một lăng ",
+          "visualPrompt": "A revealing close-up showing the internal mechanisms and abstract patterns related to Góc nhìn sâu sắc, scholarly and analytical atmosphere. Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain. cinematic wide shot, 35mm anamorphic lens, f/1.8, shallow depth of field, hyper-detailed texture, 8k resolution",
+          "captions": [
+            {
+              "id": "cap3",
+              "wordIds": [
+                "w49",
+                "w50",
+                "w51",
+                "w52",
+                "w53",
+                "w54",
+                "w55",
+                "w56",
+                "w57",
+                "w58",
+                "w59",
+                "w60",
+                "w61",
+                "w62",
+                "w63",
+                "w64",
+                "w65",
+                "w66",
+                "w67",
+                "w68",
+                "w69",
+                "w70",
+                "w71",
+                "w72"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "b4",
+          "range": {
+            "startWordId": "w73",
+            "endWordId": "w94"
+          },
+          "layout": "split-right",
+          "directorNote": "Đúc kết: Sự thông tuệ bắt đầu từ việc thấu hiểu chính mình và không n",
+          "visualPrompt": "A serene resolution scene representing Đúc kết, dawn light illuminating a path forward, feeling of clarity. Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain. cinematic wide shot, 35mm anamorphic lens, f/1.8, shallow depth of field, hyper-detailed texture, 8k resolution",
+          "captions": [
+            {
+              "id": "cap4",
+              "wordIds": [
+                "w73",
+                "w74",
+                "w75",
+                "w76",
+                "w77",
+                "w78",
+                "w79",
+                "w80",
+                "w81",
+                "w82",
+                "w83",
+                "w84",
+                "w85",
+                "w86",
+                "w87",
+                "w88",
+                "w89",
+                "w90",
+                "w91",
+                "w92",
+                "w93",
+                "w94"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "music": [],
+  "meta": {
+    "title": "Tổng hợp thành spec hoàn chỉnh",
+    "description": "Video tạo tự động bởi Faceless Studio cho chủ đề Tổng hợp thành spec hoàn chỉnh"
+  }
+}

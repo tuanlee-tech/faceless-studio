@@ -1,13 +1,13 @@
-import React from "react";
-import { Clock, Layers, Film, CheckCircle2, AlertCircle, Loader2, CircleDot } from "lucide-react";
+import { Clock, Layers, Film, CheckCircle2, AlertCircle, Loader2, CircleDot, Trash2 } from "lucide-react";
 import type { ProjectSummary } from "../types/index.js";
 
 interface ProjectCardProps {
   project: ProjectSummary;
   onSelect: (slug: string) => void;
+  onDelete?: (slug: string, e: React.MouseEvent) => void;
 }
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) => {
+export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, onDelete }) => {
   const { slug, config, state } = project;
   const stages = state?.stages || [];
 
@@ -39,8 +39,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) =
         {/* Header: Slug & Overall Status Icon */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div>
-            <h3 className="font-semibold text-base text-slate-100 group-hover:text-brand-300 transition-colors tracking-tight line-clamp-1">
-              {slug}
+            <h3 className="font-semibold text-base text-slate-100 group-hover:text-brand-300 transition-colors tracking-tight line-clamp-1" title={config?.title || slug}>
+              {config?.title || slug}
             </h3>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
@@ -52,7 +52,20 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect }) =
             </div>
           </div>
 
-          <div className="shrink-0">
+          <div className="shrink-0 flex items-center gap-1.5">
+            {onDelete && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(slug, e);
+                }}
+                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                title="Xóa dự án"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
             {hasError ? (
               <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center" title="Lỗi trong quá trình xử lý">
                 <AlertCircle className="w-4 h-4" />

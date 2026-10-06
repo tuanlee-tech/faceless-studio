@@ -1,0 +1,30 @@
+{
+  "projectSlug": "bi-an-tam-giac-quy-bermuda",
+  "stages": [
+    {
+      "stage": "outline",
+      "status": "done"
+    },
+    {
+      "stage": "script",
+      "status": "done"
+    },
+    {
+      "stage": "direct",
+      "status": "done"
+    },
+    {
+      "stage": "tts",
+      "status": "done"
+    },
+    {
+      "stage": "spec",
+      "status": "running"
+    },
+    {
+      "stage": "long-16x9",
+      "status": "pending"
+    }
+  ],
+  "updatedAt": "2026-10-06T08:55:31.209Z"
+}

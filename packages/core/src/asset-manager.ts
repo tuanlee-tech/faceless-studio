@@ -87,20 +87,27 @@ export class AssetManager {
     let beatsToPrompt: Array<{
       id: string;
       directorNote?: string;
+      visualPrompt?: string;
       title?: string;
       chapterTitle?: string;
     }> = [];
 
+    let styleLock = "";
+
     if (existsSync(specPath)) {
       try {
-        const spec: VideoSpec = VideoSpecSchema.parse(
-          JSON.parse(readFileSync(specPath, "utf-8")),
-        );
+        const specJson = JSON.parse(readFileSync(specPath, "utf-8"));
+        const spec: VideoSpec = VideoSpecSchema.parse(specJson);
+        styleLock = specJson.styleLock || (spec.templateId.includes("mono") 
+          ? "Baroque monochrome chiaroscuro, dramatic Caravaggio lighting, high-contrast black-and-white, rich deep blacks, crisp ivory highlights, atmospheric volumetric fog, subtle film grain"
+          : "Contemporary cinematic realism, minimalist composition, clean negative space, soft ambient studio lighting, premium editorial color grading");
+
         for (const chap of spec.chapters || []) {
           for (const beat of chap.beats || []) {
             beatsToPrompt.push({
               id: beat.id,
               directorNote: beat.directorNote,
+              visualPrompt: beat.visualPrompt,
               chapterTitle: chap.title,
             });
           }
@@ -112,9 +119,9 @@ export class AssetManager {
 
     if (beatsToPrompt.length === 0) {
       beatsToPrompt = [
-        { id: "b1", directorNote: "Hình ảnh mở đầu chủ đề", chapterTitle: "Mở đầu" },
-        { id: "b2", directorNote: "Hình ảnh minh họa nội dung chính", chapterTitle: "Nội dung" },
-        { id: "b3", directorNote: "Hình ảnh tổng kết và đúc kết", chapterTitle: "Kết thúc" },
+        { id: "b1", directorNote: "Hình ảnh mở đầu chủ đề", visualPrompt: "Mở đầu", chapterTitle: "Mở đầu" },
+        { id: "b2", directorNote: "Hình ảnh minh họa nội dung chính", visualPrompt: "Nội dung", chapterTitle: "Nội dung" },
+        { id: "b3", directorNote: "Hình ảnh tổng kết và đúc kết", visualPrompt: "Kết thúc", chapterTitle: "Kết thúc" },
       ];
     }
 
@@ -137,13 +144,18 @@ export class AssetManager {
     ];
 
     beatsToPrompt.forEach((beat, idx) => {
+      const beatVisual = beat.visualPrompt || beat.directorNote || `Visual scene for beat ${beat.id}`;
+      const alreadyHasStyle = beatVisual.toLowerCase().includes("chiaroscuro") || beatVisual.toLowerCase().includes("cinematic realism") || beatVisual.length > 200;
+      
+      const fullPrompt = alreadyHasStyle
+        ? `${beatVisual}. Masterpiece, award-winning cinematography --ar 16:9 --v 6.0 --no text, watermark, logo, blurry, cartoon, 3d render, distorted faces, oversaturated, low quality, deformed anatomy`
+        : `${beatVisual}. Style: ${styleLock}. Camera: cinematic wide shot, shot on 35mm anamorphic lens, f/1.8, shallow depth of field, sharp subject focus, hyper-detailed texture. Masterpiece, award-winning cinematography --ar 16:9 --v 6.0 --no text, watermark, logo, blurry, cartoon, 3d render, distorted faces, oversaturated, low quality, deformed anatomy`;
+
       lines.push(`### Visual #${idx + 1} — Beat [${beat.id}] (${beat.chapterTitle || "General"})`);
       lines.push(`- **Target File Name:** \`${beat.id}.png\``);
       lines.push(`- **Aspect Ratio:** \`--ar 16:9\` (hoặc \`--ar 9:16\` cho Short)`);
-      lines.push(
-        `- **Prompt Gợi Ý:** A cinematic historical psychological illustration of ${beat.directorNote || "subject context"}, dramatic lighting, highly detailed, masterwork, 8k resolution, oil painting aesthetic --no modern text, watermark`,
-      );
       lines.push(`- **Ghi chú đạo diễn:** ${beat.directorNote || "N/A"}`);
+      lines.push(`- **Prompt (Copy dán):**\n\`\`\`\n${fullPrompt}\n\`\`\``);
       lines.push("");
     });
 

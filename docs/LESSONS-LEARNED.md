@@ -212,6 +212,53 @@
 
 ---
 
+## 17. Thiết kế Thao tác Xóa Dữ liệu An toàn (Destructive Operation Safety & Anti-Path Traversal)
+
+- **Nguyên tắc an toàn khi xóa dự án:**
+  - Xóa dự án là thao tác hủy diệt (destructive) không thể hoàn tác trên hệ thống tệp. Nếu không kiểm soát chặt, kẻ tấn công hoặc lỗi cấu hình có thể gây xóa nhầm dữ liệu ngoài ý muốn hoặc tấn công Directory Traversal (`../../`).
+- **Quy tắc cho Sub-agents:**
+  1. **Chống Path Traversal ở tầng Core:**
+     - Validate định dạng slug nghiêm ngặt (`/^[a-zA-Z0-9_-]+$/`).
+     - Luôn kiểm tra `projectDir.startsWith(resolve(this.baseDir))` trước khi gọi `rmSync`.
+  2. **Fail-Fast & Đúng HTTP Status:**
+     - Nếu slug không hợp lệ $\rightarrow$ throw error / HTTP 400.
+     - Nếu dự án không tồn tại $\rightarrow$ throw error `Project not found` / HTTP 404.
+  3. **Bảo vệ dữ liệu & Trải nghiệm UI:**
+     - Không bao giờ thực thi xóa ngay lập tức khi người dùng click một chạm. Luôn hiển thị Dialog/Modal xác nhận rõ ràng với tên slug cần xóa và cảnh báo rủi ro.
+     - Trên thẻ `ProjectCard`, gọi `e.stopPropagation()` khi bấm nút xóa để không kích hoạt sự kiện click mở trang chi tiết.
+     - Sau khi xóa thành công, tự động làm sạch `selectedSlug` nếu đang ở trang chi tiết của dự án đó và refresh danh sách dashboard.
+
+---
+
+## 18. Tính toàn vẹn của Dữ liệu Âm thanh Giả lập (Mock Audio Integrity & FFprobe Validation)
+
+- **Sai lầm đã mắc:**
+  - Trong `packages/cli/src/commands/run.ts`, stage `tts` trước đây ghi chuỗi text thô `"RIFF mock wav audio data"` thành file `audio/narration.wav`.
+  - Khi Remotion tiến hành render video, `ffprobe` (tích hợp trong bundle Remotion compositor) kiểm tra cấu trúc stream âm thanh và lập tức crash với lỗi: `Invalid data found when processing input`.
+- **Bài học & Quy tắc:**
+  1. Khi tạo file nhị phân giả lập (audio WAV, image PNG) trong CLI hoặc Server, **tuyệt đối không dùng plain-text string**.
+  2. Phải luôn sử dụng header nhị phân hợp lệ tối thiểu (ví dụ chuỗi Base64 của 44-byte PCM WAV header: `UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=`), hoặc gọi lệnh `ffmpeg` sinh file audio thực thụ trước khi đưa vào pipeline render.
+  3. Trong `qa-manager.ts`, danh sách đường dẫn tìm kiếm video hậu kỳ (`candidates`) cần bao gồm cả thư mục `out/long-16x9/<slug>.mp4` lẫn `dist/` để hỗ trợ tự động nhận diện kết quả render của cả CLI và Web UI mà không cần cờ thủ công.
+
+---
+
+## 19. Trải nghiệm Tự động hóa Pipeline & Sáng tạo Asset AI trong Web Studio (Pipeline Auto-Advancement & AI Asset Synergy)
+
+- **Sai lầm đã mắc:**
+  1. Form Editor kết quả trước đây luôn nạp `SAMPLE_TEMPLATES` đè lên `resultJson` mỗi lần `loadData()`, khiến người dùng tưởng hệ thống chưa lưu hoặc hiển thị sai placeholder mẫu sau khi đã báo "Done".
+  2. Không tự động chuyển tiếp stage sau khi thẩm định thành công, khiến người dùng phải tự tìm nút khởi chạy stage tiếp theo.
+  3. Bắt người dùng phải tự nhập cấu trúc JSON phức tạp bằng tay thay vì cho phép viết ý tưởng tự nhiên dạng chat prompt.
+  4. Storyboard chưa hỗ trợ tạo ảnh AI tự động (khiến video thiếu asset minh họa) và chưa hiển thị chi tiết prompt đạo diễn cho những ai muốn tự tạo thủ công trên Midjourney / DALL-E.
+- **Bài học & Quy tắc giải quyết:**
+  1. **Nạp kết quả thực tế:** Endpoint `GET /projects/:slug/tasks/:taskId/result` luôn được ưu tiên gọi đầu tiên để hiển thị đúng nội dung đã lưu từ đĩa (`results/<taskId>.json`). Chỉ hiển thị sample khi task hoàn toàn mới.
+  2. **Tự động chuyển tiếp Stage (Auto Next Stage):** Khi thẩm định thành công (`PASSED`), UI tự động xác định stage tiếp theo trong chuỗi `outline` $\rightarrow$ `script` $\rightarrow$ `direct` $\rightarrow$ `spec`, kích hoạt `api.runStage(slug, nextStage)`, load task mới và hiển thị thông báo chuyển tiếp mượt mà.
+  3. **Chat Prompt Assistant:** Tích hợp bộ trợ lý AI trên đầu editor; người dùng chỉ cần nhập văn bản ý tưởng tự nhiên hoặc click chip gợi ý, Agent sẽ gọi backend để tự động suy luận ra JSON chuẩn Zod để người dùng duyệt trước khi lưu.
+  4. **Song hành 2 chế độ Asset (AI & Thủ công):**
+     - **AI Assets:** Nút 1-click sinh toàn bộ ảnh hoặc sinh từng beat qua Gemini Imagen API (nếu có `GEMINI_API_KEY`) hoặc Creative Synth cục bộ (Python Pillow/FFmpeg).
+     - **Tự tạo thủ công:** Hiển thị thẻ Prompt Chi Tiết (Chủ đề, Ánh sáng Baroque Chiaroscuro, Ống kính 35mm anamorphic, Bố cục `--ar 16:9`/`9:16`, Negative prompt) kèm nút 1-click Copy và ô dropzone upload riêng cho từng beat.
+
+---
+
 ## 12. Checklist Tự Kiểm Tra Bắt Buộc Trước Khi Báo Cáo Hoàn Thành (Pre-Flight Checklist)
 
 Mỗi khi làm xong một task, sub-agent **BẮT BUỘC** phải tự kiểm tra danh sách sau:
@@ -224,3 +271,14 @@ Mỗi khi làm xong một task, sub-agent **BẮT BUỘC** phải tự kiểm tr
 - [ ] **6. Số liệu trung thực:** Đếm chính xác số test passed từ terminal và điền vào báo cáo nghiệm thu `docs/reports/task-X.Y-report.md`.
 - [ ] **7. Không hardcode:** Không có dummy bypass hay hardcode đường dẫn OS cục bộ.
 
+
+---
+
+## 20. Trải nghiệm UX với các State đặc thù không có trong Task Inbox (UI-driven Stages)
+
+- **Sai lầm đã mắc:**
+  - Stage `tts` là một stage không chạy ngầm mà yêu cầu tương tác UI (chèn thẻ cảm xúc). Khi thiết kế UI, do dựa vào `nextPendingStage === "tts"` để hiển thị, nếu user đã hoàn thành stage này (`status: "done"`) thì sẽ không còn cách nào mở lại giao diện TTS để sửa.
+- **Bài học & Quy tắc giải quyết:**
+  1. Với các Stage không có task tĩnh (như `tts`), phải chủ động tiêm (inject) mock task vào danh sách Task Inbox trong React State để user có thể click chọn lại bất cứ lúc nào.
+  2. Dùng điều kiện hiển thị UI phụ thuộc vào `activeTask.stage` (task đang chọn) thay vì trạng thái pending của dự án. Điều này đảm bảo trải nghiệm thống nhất với các task tĩnh.
+  3. Khi một UI-driven stage hoàn tất (như click "Tạo Audio"), phải tự động chạy stage tiếp theo ngầm (`spec`) và báo hiệu rõ ràng cho user.

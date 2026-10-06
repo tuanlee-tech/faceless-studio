@@ -1,0 +1,16 @@
+{
+  "slug": "doi-quan-dat-nung",
+  "title": "Đội quân đất nung",
+  "topicId": "history",
+  "templateId": "baroque-mono",
+  "targetMinutes": 2,
+  "formats": [
+    "long-16x9",
+    "short-9x16"
+  ],
+  "assetBudget": 50,
+  "qaThreshold": 70,
+  "voice": "default",
+  "speed": 1,
+  "createdAt": "2026-10-06T05:29:33.961Z"
+}

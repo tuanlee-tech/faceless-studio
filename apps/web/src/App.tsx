@@ -85,6 +85,23 @@ export const App: React.FC = () => {
     setSelectedSlug(slug);
   };
 
+  const handleDeleteProject = async (slug: string) => {
+    try {
+      const res = await api.deleteProject(slug);
+      if (res.success) {
+        addToast("success", `Dự án "${slug}" đã được xóa thành công.`);
+        if (selectedSlug === slug) {
+          setSelectedSlug(null);
+        }
+        loadProjects(true);
+      } else {
+        addToast("error", `Lỗi khi xóa dự án: ${res.error || "Không xác định"}`);
+      }
+    } catch (err: any) {
+      addToast("error", `Không thể xóa dự án: ${err.message}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
       {/* Header */}
@@ -105,6 +122,7 @@ export const App: React.FC = () => {
               loadProjects(true);
             }}
             onNotify={addToast}
+            onDeleteProject={handleDeleteProject}
           />
         ) : (
           <Dashboard
@@ -112,6 +130,7 @@ export const App: React.FC = () => {
             isLoading={isLoading}
             onSelectProject={handleSelectProject}
             onNewProject={() => setIsCreateModalOpen(true)}
+            onDeleteProject={handleDeleteProject}
           />
         )}
       </main>

@@ -2,7 +2,7 @@
 
 Hệ thống biến **một ý tưởng thô** thành **video faceless hoàn chỉnh** — video dài 16:9 cho YouTube (5–30 phút) và các Short 9:16 sinh ra từ cùng nội dung — với giọng đọc tiếng Việt, nhạc, SFX, subtitle và hình ảnh có chỉ đạo như một video director.
 
-> Trạng thái: **giai đoạn đặc tả**. Chưa có code. Bộ tài liệu này là đầu vào để AI agent (Google Antigravity hoặc agent khác) xây dựng hệ thống.
+> Trạng thái: **Đã hoàn thiện Phase 0 đến Phase 4** (Core Engine, Pipeline, Templates, Shorts, Audio Mix, QA Gates, CLI và Web UI).
 
 ## Nguyên tắc cốt lõi
 
@@ -29,6 +29,84 @@ Hệ thống biến **một ý tưởng thô** thành **video faceless hoàn ch�
 | `docs/ROADMAP.md` | Các phase, tiêu chí nghiệm thu, spike, rủi ro |
 | `docs/SKILLS.md` | Skill cần cài + skill tự viết |
 | `skills/*/SKILL.md` | Bản nháp 4 skill tự viết |
+
+## Hướng dẫn sử dụng & Khởi chạy (Usage Guide)
+
+### 1. Chuẩn bị môi trường & Cài đặt
+
+```bash
+# Cài đặt toàn bộ dependencies
+pnpm install
+
+# Build mã nguồn TypeScript cho toàn bộ packages & apps
+pnpm build
+
+# Kiểm tra tính tương thích môi trường (Node, pnpm, Python, uv, ffmpeg, ffprobe)
+pnpm studio doctor
+```
+
+---
+
+### 2. Chạy giao diện Web (Web UI & API Server)
+
+Dự án hỗ trợ Web UI tương tác trực quan với SSE realtime:
+
+```bash
+# Khởi động Backend API server (Hono) - mặc định tại http://localhost:3005
+pnpm server
+
+# Khởi động Frontend Web (Vite + React) - mặc định tại http://localhost:3000
+pnpm web
+```
+
+Truy cập trình duyệt tại **http://localhost:3000** để tạo dự án mới, giám sát trạng thái pipeline, duyệt Task Inbox, quản lý assets và render video.
+
+---
+
+### 3. Sử dụng qua dòng lệnh CLI (`studio`)
+
+Bạn có thể chạy toàn bộ pipeline độc lập thông qua CLI:
+
+```bash
+# 1. Kiểm tra môi trường hệ thống
+pnpm studio doctor
+
+# 2. Khởi tạo một dự án video mới
+pnpm studio new demo-video --topic sample --template baroque-mono --minutes 1 --formats long-16x9
+
+# 3. Xem trạng thái và các stage của dự án
+pnpm studio status demo-video
+
+# 4. Xem danh sách task đang chờ agent hoặc người dùng xử lý
+pnpm studio tasks demo-video
+
+# 5. Chạy stage tiếp theo (hoặc chỉ định stage: outline, script, direct, spec, tts, align)
+pnpm studio run demo-video
+
+# 6. Kiểm tra hợp lệ (validate) kịch bản, beat và spec.json
+pnpm studio validate demo-video
+
+# 7. Xuất Prompt Pack cho AI sinh ảnh/video
+pnpm studio assets demo-video export
+
+# 8. Nhập tài nguyên (assets) đã sinh vào dự án
+pnpm studio assets demo-video import ./my-assets
+
+# 9. Render video dài 16:9 (MP4 kèm audio mix & subtitle chuẩn neo theo từ)
+pnpm studio render demo-video --format long-16x9
+
+# 10. Render các đoạn video Shorts 9:16
+pnpm studio shorts demo-video
+
+# 11. Kiểm tra chất lượng video trước và sau render (QA Gates)
+pnpm studio qa demo-video --pre
+pnpm studio qa demo-video --post
+
+# 12. Xóa dự án (xóa toàn bộ file và thư mục dự án trên đĩa)
+pnpm studio delete demo-video
+```
+
+Mọi lệnh CLI đều hỗ trợ cờ `--json` để xuất kết quả dạng JSON cho automation hoặc tích hợp bên ngoài.
 
 ## Cách giao việc cho agent
 

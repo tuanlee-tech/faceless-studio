@@ -15,6 +15,7 @@ export interface ProjectState {
 
 export interface ProjectConfig {
   slug: string;
+  title?: string;
   topicId: string;
   templateId: string;
   targetMinutes: number;
@@ -51,6 +52,7 @@ export interface TopicInfo {
 
 export interface CreateProjectPayload {
   slug: string;
+  title?: string;
   topic?: string;
   template?: string;
   minutes?: number;
