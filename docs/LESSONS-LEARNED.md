@@ -176,6 +176,19 @@
 
 ---
 
+## 14. Phân tách Môi trường Kiểm thử (Node vs Jsdom) khi Tích hợp Web & Bundler
+
+- **Sai lầm đã mắc (Task 4.2):**
+  - Khi cấu hình Vitest trong `apps/web`, thiết lập mặc định `environment: "jsdom"`.
+  - Khi test file import `createApp` từ `@faceless/server` (vốn nạp `@remotion/bundler` và `esbuild`), `esbuild` kiểm tra điều kiện bất biến: `new TextEncoder().encode("") instanceof Uint8Array`.
+  - Do `jsdom` chạy trên một realm/sandbox VM riêng, prototype của `Uint8Array` bị lệch khỏi global Node, khiến `esbuild` văng lỗi: `Invariant violation: "new TextEncoder().encode("") instanceof Uint8Array" is incorrectly false`.
+- **Bài học & Quy tắc:**
+  1. Các bài kiểm thử tích hợp API client (gọi in-memory backend Hono hoặc thao tác file hệ thống) bắt buộc phải cấu hình `environment: "node"`.
+  2. Không lạm dụng `jsdom` cho toàn bộ test suite trừ khi bài test thực sự render DOM component với React Testing Library.
+  3. Trong `tsconfig.json` của Vite frontend, luôn khai báo `"types": ["vite/client"]` để `tsc --noEmit` nhận diện chính xác `import.meta.env`.
+
+---
+
 ## 12. Checklist Tự Kiểm Tra Bắt Buộc Trước Khi Báo Cáo Hoàn Thành (Pre-Flight Checklist)
 
 Mỗi khi làm xong một task, sub-agent **BẮT BUỘC** phải tự kiểm tra danh sách sau:
