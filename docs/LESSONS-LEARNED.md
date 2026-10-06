@@ -189,6 +189,29 @@
 
 ---
 
+## 15. Quản lý Lỗi Nghiệp vụ và HTTP Status Code trong Client-Server Protocol
+
+- **Sai lầm đã mắc (Task 4.3):**
+  - Ban đầu hàm helper `request()` trong `apps/web/src/api/client.ts` tự động ném ngoại lệ khi `data.success === false`.
+  - Tuy nhiên trong nghiệp vụ thẩm định (`studio validate`), khi kịch bản vi phạm schema Zod, backend trả về HTTP 200 `{ success: false, results: [...] }` để client bóc tách chi tiết từng task bị lỗi.
+  - Việc `request()` tự ý throw khiến UI bị crash hoặc không bắt được danh sách lỗi chi tiết để hiển thị lên popup / form error cho người dùng sửa.
+- **Bài học & Quy tắc:**
+  1. Phân biệt rạch ròi giữa lỗi tầng HTTP transport (`!response.ok` $\implies$ ném Error) và kết quả thẩm định thất bại của domain (`data.success === false` với status 200 $\implies$ trả về data đầy đủ để UI hiển thị phản hồi/gợi ý sửa đổi).
+  2. Các hàm thẩm định trên UI luôn trả về payload kết quả chứa mảng `results: [{ taskId, stage, status, error }]` để render UI thân thiện.
+
+---
+
+## 16. Đồng bộ Bản dựng Server (Build Out-of-date) trong Monorepo khi Test Phụ thuộc
+
+- **Sai lầm đã mắc (Task 4.4):**
+  - Khi bổ sung endpoint mới vào `apps/server/src/app.ts`, `apps/web/src/__tests__/web.test.ts` import `createApp` từ `@faceless/server/app` (vốn trỏ tới `./dist/app.js` trong `package.json`).
+  - Nếu quên chạy lệnh build trên `@faceless/server`, test của web sẽ chạy trên file build cũ và báo lỗi `404 Route Not Found`.
+- **Bài học & Quy tắc:**
+  1. Trong monorepo TypeScript, khi một package import `dist` của package khác qua workspace, luôn chạy `pnpm --filter <dep> run build` ngay sau khi cập nhật mã nguồn dependency trước khi chạy test tầng trên.
+  2. Luôn duy trì quy trình 3 cổng kiểm tra đồng thời trên toàn bộ monorepo: `pnpm -r run lint`, `pnpm -r run build`, `pnpm -r run test`.
+
+---
+
 ## 12. Checklist Tự Kiểm Tra Bắt Buộc Trước Khi Báo Cáo Hoàn Thành (Pre-Flight Checklist)
 
 Mỗi khi làm xong một task, sub-agent **BẮT BUỘC** phải tự kiểm tra danh sách sau:

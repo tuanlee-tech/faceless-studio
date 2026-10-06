@@ -12,6 +12,7 @@ import {
 import {
   ProjectManager,
   TaskInbox,
+  AssetManager,
   QAManager,
   BUILTIN_TEMPLATES,
   autoDetectShortCandidates,
@@ -761,6 +762,138 @@ export function createApp(options: CreateAppOptions = {}) {
       // Keep open up to 60s
       await stream.sleep(60000);
       clearInterval(interval);
+    });
+  });
+
+  // POST /projects/:slug/tasks/:taskId/result - Save task result JSON
+  app.post("/projects/:slug/tasks/:taskId/result", async (c) => {
+    const slug = c.req.param("slug");
+    const taskId = c.req.param("taskId");
+    const body = (await c.req.json().catch(() => ({}))) as { result?: any; stage?: string };
+    const { result, stage } = body;
+
+    const projDir = resolve(baseDir, slug);
+    if (!existsSync(projDir)) {
+      return c.json({ success: false, error: `Project "${slug}" not found` }, 404);
+    }
+
+    if (!result) {
+      return c.json({ success: false, error: "Missing result payload" }, 400);
+    }
+
+    const resultsDir = resolve(projDir, "results");
+    mkdirSync(resultsDir, { recursive: true });
+
+    const resultPath1 = resolve(resultsDir, `${taskId}.json`);
+    writeFileSync(resultPath1, JSON.stringify(result, null, 2), "utf-8");
+
+    if (stage) {
+      const resultPath2 = resolve(resultsDir, `${taskId}-${stage}.json`);
+      writeFileSync(resultPath2, JSON.stringify(result, null, 2), "utf-8");
+    }
+
+    return c.json({ success: true, message: "Result saved successfully" });
+  });
+
+  // GET /projects/:slug/tasks/:taskId/errors - Read errors file if present
+  app.get("/projects/:slug/tasks/:taskId/errors", (c) => {
+    const slug = c.req.param("slug");
+    const taskId = c.req.param("taskId");
+    const projDir = resolve(baseDir, slug);
+
+    if (!existsSync(projDir)) {
+      return c.json({ success: false, error: `Project "${slug}" not found` }, 404);
+    }
+
+    const errorsPath = resolve(projDir, "results", `${taskId}-errors.md`);
+    if (existsSync(errorsPath)) {
+      const content = readFileSync(errorsPath, "utf-8");
+      return c.json({ success: true, hasErrors: true, content });
+    }
+
+    return c.json({ success: true, hasErrors: false, content: null });
+  });
+
+  // GET /projects/:slug/assets/export - Export Prompt Pack
+  app.get("/projects/:slug/assets/export", (c) => {
+    const slug = c.req.param("slug");
+    const am = new AssetManager(baseDir);
+    try {
+      const { path, count } = am.exportPromptPack(slug);
+      const content = readFileSync(path, "utf-8");
+      return c.json({ success: true, promptPack: content, count, path });
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message }, 500);
+    }
+  });
+
+  // POST /projects/:slug/assets/upload - Upload and auto-import asset
+  app.post("/projects/:slug/assets/upload", async (c) => {
+    const slug = c.req.param("slug");
+    const body = (await c.req.json().catch(() => ({}))) as {
+      filename?: string;
+      contentBase64?: string;
+    };
+    const { filename, contentBase64 } = body;
+
+    if (!filename || !contentBase64) {
+      return c.json({ success: false, error: "Missing filename or contentBase64" }, 400);
+    }
+
+    const am = new AssetManager(baseDir);
+    const { incomingDir } = am.initAssetDirs(slug);
+    const filePath = resolve(incomingDir, filename);
+
+    writeFileSync(filePath, Buffer.from(contentBase64, "base64"));
+    const { imported, count } = am.importAssets(slug);
+
+    return c.json({ success: true, count, imported });
+  });
+
+  // GET /projects/:slug/assets/manifest - Read manifest.json
+  app.get("/projects/:slug/assets/manifest", (c) => {
+    const slug = c.req.param("slug");
+    const am = new AssetManager(baseDir);
+    try {
+      const manifest = am.loadManifest(slug);
+      return c.json({ success: true, manifest });
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message }, 500);
+    }
+  });
+
+  // GET /projects/:slug/files/* - Serve project files (video, audio, images)
+  app.get("/projects/:slug/files/*", (c) => {
+    const slug = c.req.param("slug");
+    const filePathRel = c.req.path.replace(`/projects/${slug}/files/`, "");
+    const fullPath = resolve(baseDir, slug, filePathRel);
+
+    if (!existsSync(fullPath)) {
+      return c.json({ success: false, error: "File not found" }, 404);
+    }
+
+    const ext = fullPath.split(".").pop()?.toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      png: "image/png",
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      webp: "image/webp",
+      svg: "image/svg+xml",
+      mp4: "video/mp4",
+      webm: "video/webm",
+      wav: "audio/wav",
+      mp3: "audio/mpeg",
+      json: "application/json",
+      md: "text/markdown",
+    };
+
+    const contentType = mimeTypes[ext || ""] || "application/octet-stream";
+    const content = readFileSync(fullPath);
+    return new Response(content, {
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "no-cache",
+      },
     });
   });
 

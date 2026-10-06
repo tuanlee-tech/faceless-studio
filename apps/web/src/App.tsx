@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Header } from "./components/Header.js";
 import { Dashboard } from "./components/Dashboard.js";
 import { CreateProjectModal } from "./components/CreateProjectModal.js";
+import { ProjectDetail } from "./components/ProjectDetail.js";
 import { api } from "./api/client.js";
 import type { ProjectSummary } from "./types/index.js";
 import { CheckCircle, AlertTriangle, X } from "lucide-react";
@@ -72,13 +73,16 @@ export const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [loadProjects, checkServerStatus]);
 
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+
   const handleProjectCreated = (slug: string) => {
     addToast("success", `Dự án "${slug}" đã được tạo thành công!`);
     loadProjects(true);
+    setSelectedSlug(slug);
   };
 
   const handleSelectProject = (slug: string) => {
-    addToast("success", `Đã chọn dự án: ${slug}`);
+    setSelectedSlug(slug);
   };
 
   return (
@@ -93,12 +97,23 @@ export const App: React.FC = () => {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Dashboard
-          projects={projects}
-          isLoading={isLoading}
-          onSelectProject={handleSelectProject}
-          onNewProject={() => setIsCreateModalOpen(true)}
-        />
+        {selectedSlug ? (
+          <ProjectDetail
+            slug={selectedSlug}
+            onBack={() => {
+              setSelectedSlug(null);
+              loadProjects(true);
+            }}
+            onNotify={addToast}
+          />
+        ) : (
+          <Dashboard
+            projects={projects}
+            isLoading={isLoading}
+            onSelectProject={handleSelectProject}
+            onNewProject={() => setIsCreateModalOpen(true)}
+          />
+        )}
       </main>
 
       {/* Footer */}

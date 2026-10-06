@@ -135,5 +135,84 @@ describe("Web UI Foundation & API Client (@faceless/web)", () => {
       const url = api.getEventsUrl("my-slug");
       expect(url).toContain("/projects/my-slug/events");
     });
+
+    it("Task 4.3: saveTaskResult and validateTasks completes the pipeline stage", async () => {
+      const slug = "inbox-test-proj";
+      await api.createProject({ slug });
+      await api.runStage(slug, "outline");
+
+      // Save result JSON
+      const saveRes = await api.saveTaskResult(slug, "001", {
+        title: "Dàn ý hoàn chỉnh",
+        points: ["Phần 1: Giới thiệu"],
+        sections: [{ id: "s1", name: "Mở đầu" }],
+      }, "outline");
+      expect(saveRes.success).toBe(true);
+
+      // Validate
+      const valRes = await api.validateTasks(slug, "001");
+      expect(valRes.success).toBe(true);
+      expect(valRes.results[0].status).toBe("PASSED");
+
+      // Verify stage becomes done
+      const state = await api.getStatus(slug);
+      const outlineStage = state.stages.find((s) => s.stage === "outline");
+      expect(outlineStage?.status).toBe("done");
+    });
+
+    it("Task 4.3: getTaskErrors reads errors.md when validation fails", async () => {
+      const slug = "error-test-proj";
+      await api.createProject({ slug });
+      await api.runStage(slug, "outline");
+
+      // Save invalid result (missing required title)
+      await api.saveTaskResult(slug, "001", { invalidField: 123 }, "outline");
+      const valRes = await api.validateTasks(slug, "001");
+      expect(valRes.success).toBe(false);
+
+      const errRes = await api.getTaskErrors(slug, "001");
+      expect(errRes.hasErrors).toBe(true);
+      expect(errRes.content).toContain("Validation Error");
+    });
+
+    it("Task 4.4: exportPromptPack, uploadAsset, and getAssetManifest manage visual assets", async () => {
+      const slug = "asset-test-proj";
+      await api.createProject({ slug });
+
+      // Export Prompt pack
+      const exportRes = await api.exportPromptPack(slug);
+      expect(exportRes.success).toBe(true);
+      expect(typeof exportRes.promptPack).toBe("string");
+
+      // Upload image asset (1x1 transparent png in base64)
+      const pngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+      const uploadRes = await api.uploadAsset(slug, "b1.png", pngBase64);
+      expect(uploadRes.success).toBe(true);
+      expect(uploadRes.count).toBe(1);
+      expect(uploadRes.imported[0].id).toBe("b1");
+
+      // Check manifest
+      const manifestRes = await api.getAssetManifest(slug);
+      expect(manifestRes.success).toBe(true);
+      expect(manifestRes.manifest.assets.length).toBe(1);
+      expect(manifestRes.manifest.assets[0].fileName).toBe("b1.png");
+
+      // Verify file serving URL
+      const fileUrl = api.getFileUrl(slug, "assets/processed/b1.png");
+      expect(fileUrl).toContain(`/projects/${slug}/files/assets/processed/b1.png`);
+    });
+
+    it("Task 4.5: getQA and render endpoints function properly", async () => {
+      const slug = "qa-render-test-proj";
+      await api.createProject({ slug });
+
+      // Pre-Render QA
+      const qaRes = await api.getQA(slug, "pre");
+      expect(typeof qaRes.passed).toBe("boolean");
+      expect(Array.isArray(qaRes.items)).toBe(true);
+
+      // Render returns error if spec is missing
+      await expect(api.render(slug, { spec: "non-existent.json" })).rejects.toThrow();
+    });
   });
 });

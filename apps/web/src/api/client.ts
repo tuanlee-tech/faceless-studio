@@ -19,7 +19,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const response = await fetch(url, { ...options, headers });
   const data = await response.json();
 
-  if (!response.ok || data.success === false) {
+  if (!response.ok) {
     const errorMsg = data?.error || `Request failed with status ${response.status}`;
     throw new Error(errorMsg);
   }
@@ -139,5 +139,35 @@ export const api = {
   async getTasks(slug: string): Promise<any[]> {
     const res = await request<{ success: boolean; tasks: any[] }>(`/projects/${slug}/tasks`);
     return res.tasks || [];
+  },
+
+  async saveTaskResult(slug: string, taskId: string, result: any, stage?: string): Promise<{ success: boolean }> {
+    return request(`/projects/${slug}/tasks/${taskId}/result`, {
+      method: "POST",
+      body: JSON.stringify({ result, stage }),
+    });
+  },
+
+  async getTaskErrors(slug: string, taskId: string): Promise<{ success: boolean; hasErrors: boolean; content: string | null }> {
+    return request(`/projects/${slug}/tasks/${taskId}/errors`);
+  },
+
+  async exportPromptPack(slug: string): Promise<{ success: boolean; promptPack: string; count: number; path: string }> {
+    return request(`/projects/${slug}/assets/export`);
+  },
+
+  async uploadAsset(slug: string, filename: string, contentBase64: string): Promise<{ success: boolean; count: number; imported: any[] }> {
+    return request(`/projects/${slug}/assets/upload`, {
+      method: "POST",
+      body: JSON.stringify({ filename, contentBase64 }),
+    });
+  },
+
+  async getAssetManifest(slug: string): Promise<any> {
+    return request(`/projects/${slug}/assets/manifest`);
+  },
+
+  getFileUrl(slug: string, relativePath: string): string {
+    return `${API_BASE}/projects/${slug}/files/${relativePath.replace(/^\/+/, "")}`;
   },
 };
