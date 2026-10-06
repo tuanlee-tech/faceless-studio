@@ -9,6 +9,7 @@ import {
   writeFileSync,
   mkdirSync,
   createReadStream,
+  statSync,
 } from "node:fs";
 import {
   ProjectManager,
@@ -590,6 +591,89 @@ export function createApp(options: CreateAppOptions = {}) {
       return c.json({ success: false, error: `Spec file not found: ${specFileName}` }, 400);
     }
 
+    // Auto-reconcile spec with TTS and assets before rendering
+    try {
+      const specData = JSON.parse(readFileSync(specPath, "utf-8"));
+      let specModified = false;
+
+      // Reconcile with results/tts.json
+      const ttsJsonPath = resolve(projDir, "results/tts.json");
+      if (existsSync(ttsJsonPath)) {
+        try {
+          const ttsData = JSON.parse(readFileSync(ttsJsonPath, "utf-8"));
+          if (
+            ttsData.durationSec &&
+            (specData.narration?.durationSec !== ttsData.durationSec ||
+              !specData.narration?.words ||
+              specData.narration.words.length === 0 ||
+              specData.narration.words.length !== ttsData.words?.length)
+          ) {
+            specData.narration = {
+              audioPath: ttsData.audioPath || specData.narration?.audioPath || "audio/narration.mp3",
+              durationSec: ttsData.durationSec,
+              words: ttsData.words || specData.narration?.words || [],
+            };
+
+            if (specData.chapters && specData.chapters.length > 0 && ttsData.words?.length > 0) {
+              const allBeats = specData.chapters.flatMap((ch: any) => ch.beats || []);
+              const numBeats = Math.max(1, allBeats.length);
+              const wordsPerBeat = Math.ceil(ttsData.words.length / numBeats);
+
+              allBeats.forEach((b: any, idx: number) => {
+                const startIdx = idx * wordsPerBeat;
+                const endIdx = Math.min((idx + 1) * wordsPerBeat - 1, ttsData.words.length - 1);
+                if (ttsData.words[startIdx] && ttsData.words[endIdx]) {
+                  b.range = {
+                    startWordId: ttsData.words[startIdx].id,
+                    endWordId: ttsData.words[endIdx].id,
+                  };
+                  b.captions = [
+                    {
+                      id: `cap${idx + 1}`,
+                      wordIds: ttsData.words.slice(startIdx, endIdx + 1).map((w: any) => w.id),
+                    },
+                  ];
+                }
+              });
+            }
+            specModified = true;
+          }
+        } catch {}
+      }
+
+      // Reconcile with assets/manifest.json
+      const manifestPath = resolve(projDir, "assets/manifest.json");
+      if (existsSync(manifestPath)) {
+        try {
+          const manifestData = JSON.parse(readFileSync(manifestPath, "utf-8"));
+          const manifestMap = new Map((manifestData.assets || []).map((a: any) => [a.beatId || a.id, a]));
+
+          (specData.chapters || []).forEach((ch: any) => {
+            (ch.beats || []).forEach((b: any) => {
+              const foundAsset: any = manifestMap.get(b.id);
+              if (foundAsset && (!b.assets || b.assets.length === 0)) {
+                b.assets = [
+                  {
+                    assetId: foundAsset.id,
+                    filePath: foundAsset.filePath,
+                    kind: foundAsset.kind || "image",
+                    license: foundAsset.license || "CC0",
+                  },
+                ];
+                specModified = true;
+              }
+            });
+          });
+        } catch {}
+      }
+
+      if (specModified) {
+        writeFileSync(specPath, JSON.stringify(specData, null, 2), "utf-8");
+      }
+    } catch (e) {
+      console.warn("Spec pre-render reconciliation warning:", e);
+    }
+
     const format: FormatId =
       body.format ||
       (specFileName.includes("short") ? "short-9x16" : "long-16x9");
@@ -1027,6 +1111,38 @@ export function createApp(options: CreateAppOptions = {}) {
     const am = new AssetManager(baseDir);
     const manifest = am.loadManifest(slug);
 
+    // Auto-attach assets to spec.json beats
+    if (existsSync(specPath)) {
+      try {
+        const specData = JSON.parse(readFileSync(specPath, "utf-8"));
+        const manifestMap = new Map((manifest.assets || []).map((a: any) => [a.beatId || a.id, a]));
+
+        let specChanged = false;
+        (specData.chapters || []).forEach((ch: any) => {
+          (ch.beats || []).forEach((b: any) => {
+            const foundAsset: any = manifestMap.get(b.id);
+            if (foundAsset && (!b.assets || b.assets.length === 0)) {
+              b.assets = [
+                {
+                  assetId: foundAsset.id,
+                  filePath: foundAsset.filePath,
+                  kind: foundAsset.kind || "image",
+                  license: foundAsset.license || "CC0",
+                },
+              ];
+              specChanged = true;
+            }
+          });
+        });
+
+        if (specChanged) {
+          writeFileSync(specPath, JSON.stringify(specData, null, 2), "utf-8");
+        }
+      } catch (e) {
+        console.error("Failed to auto-sync spec.json with assets:", e);
+      }
+    }
+
     return c.json({
       success: true,
       generatedCount: generated.length,
@@ -1173,66 +1289,106 @@ export function createApp(options: CreateAppOptions = {}) {
         directContent = JSON.stringify(directData);
       }
 
-      const body = (await c.req.json().catch(() => ({}))) as { model?: string };
-      const isGeminiTTS = body.model === "gemini";
+      const body = (await c.req.json().catch(() => ({}))) as { model?: string; voiceId?: string; currentText?: string };
+      const GEMINI_VOICES = new Set(["Kore", "Puck", "Charon", "Aoede", "Fenrir"]);
+      const isGeminiTTS = body.model === "gemini" || (body.voiceId && GEMINI_VOICES.has(body.voiceId));
+      const sourceText = body.currentText?.trim() || scriptContent;
 
       const emotionRules = isGeminiTTS 
-        ? `2. Bạn CẦN chèn thẻ cảm xúc vào văn bản để tăng tính chân thực, kết hợp cả Cảm xúc bao trùm ([...]) và Sự kiện âm thanh (<...>).
-   CÁC THẺ CHO PHÉP (Không dùng thẻ ngoài danh sách này):
-   - Cảm xúc: [enthusiasm] (hào hứng), [sadness] (buồn bã), [anger] (tức giận), [neutral] (bình thường).
-   - Sự kiện: <laugh> (cười), <sigh> (thở dài), <breath> (lấy hơi), <short pause> (ngắt nhịp).
+        ? `2. Bạn CẦN chèn thẻ cảm xúc vào văn bản theo chuẩn Gemini Flash TTS để tăng tính chân thực:
+   CÁC THẺ CHO PHÉP (TUYỆT ĐỐI không dùng thẻ ngoài danh sách này):
+   - Cảm xúc bao trùm: [enthusiasm] (hào hứng), [sadness] (buồn bã), [anger] (tức giận), [neutral] (bình thường).
+   - Sự kiện âm thanh: <laugh> (cười), <sigh> (thở dài), <breath> (lấy hơi), <short pause> (ngắt nhịp).
    Quy tắc:
-   - Thẻ cảm xúc (ngoặc vuông) đặt ở đầu câu để định hình tâm trạng.
-   - Thẻ sự kiện (ngoặc nhọn) đặt giữa hoặc cuối câu để tạo điểm nhấn âm thanh vật lý.
+   - Thẻ cảm xúc ([...]) đặt ở đầu câu để định hình tâm trạng.
+   - Thẻ sự kiện (<...>) đặt giữa hoặc cuối câu để tạo điểm nhấn âm thanh vật lý.
    - Ví dụ: [enthusiasm] Chào mọi người! <laugh> Hôm nay trời đẹp quá <breath>.`
-        : `2. Bạn có thể chèn thẻ cảm xúc vào văn bản để tăng tính chân thực. TUY NHIÊN, BẠN CHỈ ĐƯỢC PHÉP SỬ DỤNG ĐÚNG 3 THẺ SAU (không bịa thêm thẻ nào khác):
+        : `2. Bạn CẦN chèn thẻ cảm xúc vào văn bản theo chuẩn VieNeu-TTS (Local) để tăng tính chân thực.
+   TUYỆT ĐỐI BẠN CHỈ ĐƯỢC PHÉP SỬ DỤNG ĐÚNG 3 THẺ SAU (không dùng thẻ tiếng Anh hay thẻ ngoài danh sách):
    - [cười] : Để ở cuối hoặc giữa câu để tạo sự vui vẻ, tươi tắn.
    - [thở dài] : Để ở đầu hoặc giữa câu biểu thị mệt mỏi, chán nản, luyến tiếc.
    - [hắng giọng] : Để ở đầu hoặc giữa câu để tạo ngắt quãng tự nhiên (e hèm).
-   Hãy chèn các thẻ này một cách tiết chế và tự nhiên.`;
+   Hãy chèn các thẻ này một cách tiết chế, tự nhiên, đúng ngữ cảnh tiếng Việt.`;
 
       const prompt = `
-Bạn là một chuyên gia kịch bản âm thanh (Voiceover Director).
-Dưới đây là kịch bản (Script) và chỉ đạo nghệ thuật (Direct) của một video.
-Nhiệm vụ của bạn: 
-1. Lọc bỏ các tiêu đề phần (Heading), chỉ giữ lại đúng những câu thoại (Voiceover) mà người đọc (AI/người thật) sẽ phát âm.
+Bạn là AI Agent Sáng Tạo chuyên về kịch bản âm thanh và diễn xuất (Voiceover Director).
+Dưới đây là nội dung lời thoại cùng chỉ đạo nghệ thuật của video:
+
+${sourceText ? `--- NỘI DUNG LỜI THOẠI ---\n${sourceText}\n` : ""}
+${directContent ? `--- CHỈ ĐẠO NGHỆ THUẬT (DIRECT) ---\n${directContent}\n` : ""}
+
+Nhiệm vụ của bạn:
+1. Lọc bỏ các tiêu đề phần (Heading/Cảnh nếu có), giữ lại trọn vẹn lời thoại mà người đọc sẽ phát âm.
 ${emotionRules}
 3. Không làm thay đổi nội dung chính của lời thoại.
-4. CHỈ TRẢ VỀ nội dung text thuần tuý, KHÔNG CÓ markdown code block, KHÔNG JSON, KHÔNG BÌNH LUẬN.
-
---- SCRIPT ---
-${scriptContent}
-
---- DIRECT ---
-${directContent}
+4. CHỈ TRẢ VỀ nội dung text thuần tuý sau khi chèn thẻ cảm xúc, KHÔNG CÓ markdown code block, KHÔNG JSON, KHÔNG BÌNH LUẬN GIẢI THÍCH GÌ THÊM.
 `;
       
       const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        // Fallback if no API key
-        return c.json({ success: true, text: scriptContent });
+      let generatedText = "";
+
+      if (apiKey) {
+        try {
+          const { GoogleGenAI } = await import("@google/genai");
+          const ai = new GoogleGenAI({ apiKey });
+          const CANDIDATE_MODELS = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.5-flash"];
+          for (const model of CANDIDATE_MODELS) {
+            try {
+              const res = await ai.models.generateContent({
+                model,
+                contents: prompt,
+                config: { temperature: 0.7 }
+              });
+              if (res.text) {
+                generatedText = res.text.replace(/^```.*?$/gm, "").trim();
+                break;
+              }
+            } catch (err: any) {
+              console.warn(`[TTS Draft] Gemini ${model} failed:`, err.message);
+            }
+          }
+        } catch (e: any) {
+          console.warn("[TTS Draft] AI call failed, falling back to smart rule-based enhancer:", e.message);
+        }
       }
 
-      const { generateStageJsonFromPrompt } = await import("./ai-helper.js");
-      // Call Gemini directly
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.7 }
-          })
+      if (!generatedText) {
+        // Smart rule-based emotion tag inserter fallback
+        const lines = sourceText
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0 && !l.startsWith("#") && !l.toLowerCase().startsWith("cảnh ") && !l.toLowerCase().startsWith("scene "));
+        
+        const content = lines.join(" ") || sourceText;
+        const sentences = content.split(/(?<=[.?!…])\s+/);
+        const result: string[] = [];
+
+        for (let i = 0; i < sentences.length; i++) {
+          let s = sentences[i].trim();
+          if (!s) continue;
+
+          if (isGeminiTTS) {
+            if (i === 0 && !s.includes("[")) {
+              s = `[enthusiasm] ${s}`;
+            } else if (i % 3 === 0 && !s.includes("<") && !s.includes("[")) {
+              s = s.replace(/([,;])/, " <breath>$1");
+            } else if (i % 4 === 2 && !s.includes("<") && !s.includes("[")) {
+              s = `${s} <laugh>`;
+            }
+          } else {
+            // VieNeu local: only [cười], [thở dài], [hắng giọng]
+            if (i % 4 === 1 && !s.includes("[")) {
+              s = `${s} [cười]`;
+            } else if (i % 4 === 3 && !s.includes("[")) {
+              s = `[hắng giọng] ${s}`;
+            } else if (i % 5 === 2 && !s.includes("[")) {
+              s = `${s} [thở dài]`;
+            }
+          }
+          result.push(s);
         }
-      );
-      
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || "Gemini API Error");
-      
-      let generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || scriptContent;
-      // Remove any markdown formatting just in case
-      generatedText = generatedText.replace(/^```.*?$/gm, "").trim();
+        generatedText = result.join(" ") || sourceText;
+      }
 
       return c.json({ success: true, text: generatedText });
     } catch (err: any) {
@@ -1259,6 +1415,20 @@ ${directContent}
     });
   });
 
+  // GET /tts/voices - List available voices from VieNeu-TTS and Gemini
+  app.get("/tts/voices", async (c) => {
+    try {
+      const vieneuUrl = process.env.VIENEU_TTS_URL || "http://127.0.0.1:8000/v1/audio/speech";
+      const vieneuVoicesUrl = vieneuUrl.replace("/audio/speech", "/voices");
+      const res = await fetch(vieneuVoicesUrl).catch(() => null);
+      if (res && res.ok) {
+        const data = await res.json();
+        return c.json({ success: true, voices: data.data || [] });
+      }
+    } catch {}
+    return c.json({ success: true, voices: [] });
+  });
+
   // POST /projects/:slug/tts/preview - Generate a short TTS preview
   app.post("/projects/:slug/tts/preview", async (c) => {
     const slug = c.req.param("slug");
@@ -1279,16 +1449,26 @@ ${directContent}
       const { generateTTS } = await import("./tts-helper.js");
       const previewBase = resolve(audioDir, "preview.wav");
       
-      const { ext } = await generateTTS(body.text, previewBase, body.voiceId || "Thiện Minh", body.model || "auto");
+      const { ext, warning, isFallback, fallbackVoice, fallbackModel, cleanedText } = await generateTTS(body.text, previewBase, body.voiceId || "Hải Đăng", body.model || "auto");
       const previewFileName = `preview.${ext}`;
       
       return c.json({ 
         success: true, 
-        audioUrl: `http://localhost:3005/projects/${slug}/audio/${previewFileName}?t=${Date.now()}`
+        audioUrl: `http://localhost:3005/projects/${slug}/audio/${previewFileName}?t=${Date.now()}`,
+        warning,
+        isFallback,
+        fallbackVoice,
+        fallbackModel,
+        cleanedText
       });
     } catch (err: any) {
       console.error(err);
-      return c.json({ success: false, error: err.message }, 500);
+      let errorMsg = err.message || "Lỗi nghe thử TTS";
+      const isQuota = errorMsg.includes("RESOURCE_EXHAUSTED") || errorMsg.includes("429") || errorMsg.includes("quota");
+      if (isQuota) {
+        errorMsg = "Google Gemini TTS đã hết hạn mức sử dụng miễn phí trong ngày (429 Quota Exceeded: tối đa 10 lượt/ngày). Vui lòng thử các giọng đọc VieNeu-TTS Local.";
+      }
+      return c.json({ success: false, error: errorMsg, isQuotaExceeded: isQuota }, isQuota ? 429 : 500);
     }
   });
 
@@ -1314,11 +1494,12 @@ ${directContent}
       const srtPath = resolve(audioDir, "narration.srt");
       
       // 1. Generate Audio
-      const { durationSec, ext } = await generateTTS(body.text, baseNarrPath, body.voiceId || "Thiện Minh", body.model || "auto");
+      const { durationSec, ext, chunksCount, warning, isFallback, fallbackVoice, fallbackModel, cleanedText } = await generateTTS(body.text, baseNarrPath, body.voiceId || "Hải Đăng", body.model || "auto");
       const audioFileName = `narration.${ext}`;
       
-      // 2. Generate SRT and Word Timings
-      const { srt, words } = generateSrtAndWords(body.text, durationSec);
+      // 2. Generate SRT and Word Timings (using cleanedText if fallback stripped emotion tags)
+      const textForSrt = cleanedText || body.text;
+      const { srt, words } = generateSrtAndWords(textForSrt, durationSec);
       writeFileSync(srtPath, srt, "utf-8");
 
       // 3. Save to results/tts.json
@@ -1330,6 +1511,46 @@ ${directContent}
         words
       }, null, 2));
 
+      // 4. Auto-sync spec.json if exists
+      const specPath = resolve(projDir, "spec.json");
+      if (existsSync(specPath)) {
+        try {
+          const specData = JSON.parse(readFileSync(specPath, "utf-8"));
+          specData.narration = {
+            audioPath: `audio/${audioFileName}`,
+            durationSec,
+            words
+          };
+
+          if (specData.chapters && specData.chapters.length > 0 && words.length > 0) {
+            const allBeats = specData.chapters.flatMap((c: any) => c.beats || []);
+            const numBeats = Math.max(1, allBeats.length);
+            const wordsPerBeat = Math.ceil(words.length / numBeats);
+
+            allBeats.forEach((b: any, idx: number) => {
+              const startIdx = idx * wordsPerBeat;
+              const endIdx = Math.min((idx + 1) * wordsPerBeat - 1, words.length - 1);
+              if (words[startIdx] && words[endIdx]) {
+                b.range = {
+                  startWordId: words[startIdx].id,
+                  endWordId: words[endIdx].id,
+                };
+                b.captions = [
+                  {
+                    id: `cap${idx + 1}`,
+                    wordIds: words.slice(startIdx, endIdx + 1).map((w: any) => w.id),
+                  },
+                ];
+              }
+            });
+          }
+
+          writeFileSync(specPath, JSON.stringify(specData, null, 2), "utf-8");
+        } catch (e) {
+          console.error("Failed to auto-sync spec.json with TTS:", e);
+        }
+      }
+
       const pm = new ProjectManager(baseDir);
       pm.updateStage(slug, "tts", { status: "done" });
       pm.recordEvent(slug, {
@@ -1338,9 +1559,26 @@ ${directContent}
         audioPath: `audio/${audioFileName}`,
       });
 
-      return c.json({ success: true, durationSec });
+      return c.json({ 
+        success: true, 
+        durationSec,
+        format: ext,
+        audioFileName,
+        audioUrl: `http://localhost:3005/projects/${slug}/audio/${audioFileName}?t=${Date.now()}`,
+        chunksCount,
+        warning,
+        isFallback,
+        fallbackVoice,
+        fallbackModel,
+        cleanedText
+      });
     } catch (err: any) {
-      return c.json({ success: false, error: err.message }, 500);
+      let errorMsg = err.message || "Lỗi tạo TTS";
+      const isQuota = errorMsg.includes("RESOURCE_EXHAUSTED") || errorMsg.includes("429") || errorMsg.includes("quota");
+      if (isQuota) {
+        errorMsg = "Google Gemini TTS đã hết hạn mức sử dụng miễn phí trong ngày (429 Quota Exceeded: tối đa 10 lượt/ngày). Bạn hãy chuyển sang dùng Giọng đọc của VieNeu-TTS Local (hoàn toàn miễn phí và không giới hạn).";
+      }
+      return c.json({ success: false, error: errorMsg, isQuotaExceeded: isQuota }, isQuota ? 429 : 500);
     }
   });
 
@@ -1356,8 +1594,8 @@ ${directContent}
     }
   });
 
-  // GET /projects/:slug/files/* - Serve project files (video, audio, images)
-  app.get("/projects/:slug/files/*", (c) => {
+  // GET & HEAD /projects/:slug/files/* - Serve project files (video, audio, images) with HTTP Range streaming
+  app.on(["GET", "HEAD"], "/projects/:slug/files/*", (c) => {
     const slug = c.req.param("slug");
     const filePathRel = c.req.path.replace(`/projects/${slug}/files/`, "");
     const fullPath = resolve(baseDir, slug, filePathRel);
@@ -1382,12 +1620,44 @@ ${directContent}
     };
 
     const contentType = mimeTypes[ext || ""] || "application/octet-stream";
-    const content = readFileSync(fullPath);
-    return new Response(content, {
-      headers: {
+    const stat = statSync(fullPath);
+    const fileSize = stat.size;
+
+    // Support HTTP Range requests for video/audio seeking in HTML5 players
+    const rangeHeader = c.req.header("range");
+    if (rangeHeader && (contentType.startsWith("video/") || contentType.startsWith("audio/"))) {
+      const parts = rangeHeader.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunkSize = end - start + 1;
+      const stream = createReadStream(fullPath, { start, end });
+
+      return c.body(stream as any, 206, {
+        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": chunkSize.toString(),
         "Content-Type": contentType,
-        "Cache-Control": "no-cache",
-      },
+      });
+    }
+
+    if (c.req.method === "HEAD") {
+      return new Response(null, {
+        status: 200,
+        headers: {
+          "Content-Type": contentType,
+          "Content-Length": fileSize.toString(),
+          "Accept-Ranges": "bytes",
+          "Cache-Control": "no-cache",
+        },
+      });
+    }
+
+    const stream = createReadStream(fullPath);
+    return c.body(stream as any, 200, {
+      "Content-Type": contentType,
+      "Content-Length": fileSize.toString(),
+      "Accept-Ranges": "bytes",
+      "Cache-Control": "no-cache",
     });
   });
 

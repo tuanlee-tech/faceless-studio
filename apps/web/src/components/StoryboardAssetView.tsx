@@ -182,13 +182,13 @@ export const StoryboardAssetView: React.FC<StoryboardAssetViewProps> = ({
     try {
       const formData = new FormData();
       formData.append("audio", file);
-      
+
       const res = await fetch(`http://localhost:3005/projects/${slug}/audio/bgm`, {
         method: "POST",
         body: formData,
       });
       const data = await res.json();
-      
+
       if (data.success) {
         setBgmUrl(`http://localhost:3005/projects/${slug}/${data.path}?t=${Date.now()}`);
         onNotify("success", "✅ Đã tải lên file Nhạc nền (BGM) thành công!");
@@ -428,8 +428,8 @@ export const StoryboardAssetView: React.FC<StoryboardAssetViewProps> = ({
                     key={beat.id}
                     onClick={() => setActiveBeatIndex(idx)}
                     className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${isCurrent
-                        ? "bg-brand-950/40 border-brand-500 shadow-md shadow-brand-500/10 ring-1 ring-brand-500/40"
-                        : "bg-slate-900/50 border-slate-800 hover:border-slate-700"
+                      ? "bg-brand-950/40 border-brand-500 shadow-md shadow-brand-500/10 ring-1 ring-brand-500/40"
+                      : "bg-slate-900/50 border-slate-800 hover:border-slate-700"
                       }`}
                   >
                     <div>
@@ -486,7 +486,7 @@ export const StoryboardAssetView: React.FC<StoryboardAssetViewProps> = ({
                       </div>
 
                       {/* Prompt / Notes */}
-                      <p className="text-xs text-slate-300 line-clamp-2">
+                      <p className="text-xs text-slate-300">
                         {beat.directorNote || beat.visualPrompt || "Không có ghi chú đạo diễn"}
                       </p>
                     </div>
@@ -597,8 +597,8 @@ export const StoryboardAssetView: React.FC<StoryboardAssetViewProps> = ({
                   type="button"
                   onClick={() => setAssetTab("ai")}
                   className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors flex items-center gap-1 ${assetTab === "ai"
-                      ? "bg-brand-600 text-white shadow"
-                      : "text-slate-400 hover:text-white"
+                    ? "bg-brand-600 text-white shadow"
+                    : "text-slate-400 hover:text-white"
                     }`}
                 >
                   <Sparkles className="w-3 h-3" />
@@ -608,8 +608,8 @@ export const StoryboardAssetView: React.FC<StoryboardAssetViewProps> = ({
                   type="button"
                   onClick={() => setAssetTab("manual")}
                   className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors flex items-center gap-1 ${assetTab === "manual"
-                      ? "bg-brand-600 text-white shadow"
-                      : "text-slate-400 hover:text-white"
+                    ? "bg-brand-600 text-white shadow"
+                    : "text-slate-400 hover:text-white"
                     }`}
                 >
                   <Sliders className="w-3 h-3" />
@@ -621,7 +621,7 @@ export const StoryboardAssetView: React.FC<StoryboardAssetViewProps> = ({
               {assetTab === "ai" && (
                 <div className="space-y-3.5">
                   <p className="text-xs text-slate-300">
-                    Hệ thống sẽ gọi trực tiếp <strong>AI</strong> để tạo hình ảnh tức thì.<br/>(Nếu có <strong><code>IMAGE_GENERATION_API_KEY</code></strong> trong <strong>.env</strong>) 
+                    Hệ thống sẽ gọi trực tiếp <strong>AI</strong> để tạo hình ảnh tức thì.<br />(Nếu có <strong><code>IMAGE_GENERATION_API_KEY</code></strong> trong <strong>.env</strong>)
                   </p>
 
                   <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-1.5">
@@ -659,7 +659,7 @@ export const StoryboardAssetView: React.FC<StoryboardAssetViewProps> = ({
                 <div key={activeBeat.id} className="space-y-3.5 animate-fadeIn">
                   {/* Export Prompt Pack Action */}
                   <div className="flex items-center justify-end">
-                    
+
                     <button
                       type="button"
                       onClick={handleExportPromptPack}
@@ -750,8 +750,8 @@ export const StoryboardAssetView: React.FC<StoryboardAssetViewProps> = ({
                 handleFileUpload(e.dataTransfer.files);
               }}
               className={`p-6 border-2 border-dashed rounded-xl text-center transition-all cursor-pointer ${dragOver
-                  ? "border-brand-500 bg-brand-500/10"
-                  : "border-slate-800 hover:border-slate-700 bg-slate-950/40"
+                ? "border-brand-500 bg-brand-500/10"
+                : "border-slate-800 hover:border-slate-700 bg-slate-950/40"
                 }`}
             >
               <input

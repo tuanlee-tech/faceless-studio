@@ -1,4 +1,6 @@
 import "dotenv/config";
+import dns from "node:dns";
+dns.setDefaultResultOrder("ipv4first");
 import { serve } from "@hono/node-server";
 import { createApp } from "./app.js";
 

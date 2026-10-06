@@ -1,25 +1,24 @@
 import React from "react";
-import { useCurrentFrame, useVideoConfig } from "remotion";
+import { useCurrentFrame, useVideoConfig, Img } from "remotion";
 import type { VideoSpec, TemplateConfig } from "@faceless/core";
 import { Subtitle } from "../Subtitle.js";
+import { getActiveBeatInfo } from "../getActiveBeatInfo.js";
 
 export interface LayoutProps {
   spec?: VideoSpec;
   templateConfig: TemplateConfig;
+  imageSources?: Record<string, string>;
 }
 
-export const CleanSplitLayout: React.FC<LayoutProps> = ({ spec, templateConfig }) => {
+export const CleanSplitLayout: React.FC<LayoutProps> = ({ spec, templateConfig, imageSources }) => {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
 
-  const title = (spec?.meta?.title as string) || spec?.projectSlug || "Faceless Studio";
-  const seconds = (frame / fps).toFixed(1);
-  const chapter = spec?.chapters?.[0];
-  const chapterTitle = chapter?.title || "Chương 1";
+  const currentTime = frame / fps;
   const isPortrait = height > width;
 
   const words = spec?.narration?.words || [];
-  const captions = chapter?.beats?.flatMap((b) => b.captions || []) || [];
+  const { activeImage, cameraScale } = getActiveBeatInfo(spec, currentTime, imageSources);
 
   return (
     <div
@@ -34,139 +33,73 @@ export const CleanSplitLayout: React.FC<LayoutProps> = ({ spec, templateConfig }
         height: "100%",
         boxSizing: "border-box",
         position: "relative",
+        overflow: "hidden",
       }}
     >
-      {/* Primary Split Area (Text & Context) */}
+      {/* Full Visual Stage */}
       <div
         style={{
-          flex: isPortrait ? 1 : 1.1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "flex-start",
-          padding: isPortrait ? "40px 40px" : "60px 80px",
-          boxSizing: "border-box",
-          zIndex: 10,
-        }}
-      >
-        <div
-          style={{
-            display: "inline-block",
-            padding: "6px 14px",
-            backgroundColor: `${templateConfig.colors.primary}20`,
-            border: `1px solid ${templateConfig.colors.primary}60`,
-            borderRadius: "6px",
-            color: templateConfig.colors.primary || "#38bdf8",
-            fontSize: isPortrait ? 18 : 16,
-            fontWeight: 600,
-            letterSpacing: "1px",
-            textTransform: "uppercase",
-            marginBottom: 20,
-          }}
-        >
-          {chapterTitle}
-        </div>
-
-        <h1
-          style={{
-            fontSize: isPortrait ? 44 : 54,
-            fontWeight: 800,
-            margin: "0 0 20px 0",
-            lineHeight: 1.2,
-            color: templateConfig.colors.text || "#f8fafc",
-          }}
-        >
-          {title}
-        </h1>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            fontSize: isPortrait ? 18 : 16,
-            color: templateConfig.colors.secondary || "#64748b",
-            fontWeight: 500,
-          }}
-        >
-          <span>⏱ {seconds}s</span>
-          <span>•</span>
-          <span>FPS: {fps}</span>
-          <span>•</span>
-          <span>Frame: {frame}</span>
-        </div>
-      </div>
-
-      {/* Secondary Split Area (Visual Card / Media Placeholder) */}
-      <div
-        style={{
-          flex: isPortrait ? 1 : 0.9,
+          width: "100%",
+          height: "100%",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          padding: isPortrait ? "20px 40px 100px 40px" : "60px 80px",
           boxSizing: "border-box",
+          position: "relative",
         }}
       >
-        <div
-          style={{
-            width: "100%",
-            height: "85%",
-            backgroundColor: "rgba(15, 23, 42, 0.6)",
-            border: `2px dashed ${templateConfig.colors.primary}40`,
-            borderRadius: "20px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            color: templateConfig.colors.secondary || "#64748b",
-            padding: "24px",
-            boxSizing: "border-box",
-          }}
-        >
+        {activeImage ? (
           <div
             style={{
-              width: "64px",
-              height: "64px",
-              borderRadius: "50%",
-              backgroundColor: `${templateConfig.colors.primary}15`,
+              width: "100%",
+              height: "100%",
+              overflow: "hidden",
+              position: "relative",
+              backgroundColor: "#000000",
+            }}
+          >
+            <Img
+              src={activeImage}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                transform: `scale(${cameraScale})`,
+              }}
+            />
+            {/* Subtle bottom vignette to ensure subtitles are 100% legible */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: "35%",
+                background: "linear-gradient(to top, rgba(15, 23, 42, 0.85) 0%, transparent 100%)",
+              }}
+            />
+          </div>
+        ) : (
+          <div
+            style={{
+              width: "80%",
+              height: "80%",
+              backgroundColor: "rgba(15, 23, 42, 0.6)",
+              borderRadius: "20px",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              marginBottom: 16,
-              color: templateConfig.colors.primary,
-              fontSize: "28px",
+              color: templateConfig.colors.secondary || "#64748b",
             }}
           >
-            ✦
+            Clean Split
           </div>
-          <div
-            style={{
-              fontSize: 20,
-              fontWeight: 600,
-              color: templateConfig.colors.text,
-              marginBottom: 8,
-            }}
-          >
-            Visual Showcase
-          </div>
-          <div
-            style={{
-              fontSize: 15,
-              textAlign: "center",
-              maxWidth: "80%",
-              lineHeight: 1.4,
-            }}
-          >
-            Clean Split Layout • Template {templateConfig.id}
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Subtitles anchored at bottom */}
       <Subtitle
         words={words}
-        captions={captions}
         styleConfig={templateConfig.subtitles}
       />
     </div>

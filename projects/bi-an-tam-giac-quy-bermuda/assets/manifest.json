@@ -1,6 +1,6 @@
 {
   "projectSlug": "bi-an-tam-giac-quy-bermuda",
-  "updatedAt": "2026-10-06T06:01:16.485Z",
+  "updatedAt": "2026-10-06T15:50:26.557Z",
   "assets": [
     {
       "id": "b1",
@@ -12,7 +12,7 @@
       "source": "ai-generated-user-import",
       "sizeBytes": 113569,
       "sha256": "948944dda4b646b7a04b8764901b186a45c6aedf522b5575d97ef56935bfd5ed",
-      "importedAt": "2026-10-06T06:00:50.812Z"
+      "importedAt": "2026-10-06T15:50:26.557Z"
     },
     {
       "id": "b2",
@@ -24,7 +24,7 @@
       "source": "ai-generated-user-import",
       "sizeBytes": 168753,
       "sha256": "8c0c55296d73f6e09dac5d2d1e6b06a84ed4e1d9157642cf1a46fdfad3854c43",
-      "importedAt": "2026-10-06T06:01:00.979Z"
+      "importedAt": "2026-10-06T15:50:26.545Z"
     },
     {
       "id": "b3",
@@ -36,7 +36,7 @@
       "source": "ai-generated-user-import",
       "sizeBytes": 178602,
       "sha256": "d652425729718eb3d3af6653181f53e6e3e9e1141a2463ef1aefc0c73776578f",
-      "importedAt": "2026-10-06T06:01:08.240Z"
+      "importedAt": "2026-10-06T15:50:26.532Z"
     },
     {
       "id": "b4",
@@ -48,7 +48,7 @@
       "source": "ai-generated-user-import",
       "sizeBytes": 175425,
       "sha256": "a3604a675790e9842a7759a2c37e9e5eeb95a084625d74bb24edd1dd224719cb",
-      "importedAt": "2026-10-06T06:01:16.485Z"
+      "importedAt": "2026-10-06T15:50:26.519Z"
     }
   ]
 }

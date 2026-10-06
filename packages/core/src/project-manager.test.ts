@@ -57,9 +57,10 @@ describe("ProjectManager", () => {
       fs.readFileSync(path.join(projectDir, "state.json"), "utf-8")
     );
     expect(stateJson.projectSlug).toBe(slug);
-    // stages: outline, script, direct, spec, long-16x9 (5 stages)
-    expect(stateJson.stages).toHaveLength(5);
+    // stages: outline, script, direct, tts, spec, long-16x9 (6 stages)
+    expect(stateJson.stages).toHaveLength(6);
     expect(stateJson.stages[0].stage).toBe("outline");
+    expect(stateJson.stages[3].stage).toBe("tts");
     expect(stateJson.updatedAt).toBeDefined();
 
     // Check events.jsonl
@@ -84,9 +85,9 @@ describe("ProjectManager", () => {
 
     const state = pm.getState(slug);
     expect(state.projectSlug).toBe(slug);
-    expect(state.stages).toHaveLength(5);
-    expect(state.stages[4].stage).toBe("long-16x9");
-    expect(state.stages[4].status).toBe("pending");
+    expect(state.stages).toHaveLength(6);
+    expect(state.stages[5].stage).toBe("long-16x9");
+    expect(state.stages[5].status).toBe("pending");
   });
 
   it("updateStage updates stage status", () => {
@@ -102,19 +103,19 @@ describe("ProjectManager", () => {
     // Initially pending
     let state = pm.getState(slug);
     expect(state.stages[0].status).toBe("pending"); // outline
-    expect(state.stages[4].status).toBe("pending"); // long-16x9
+    expect(state.stages[5].status).toBe("pending"); // long-16x9
 
     // Update first stage to running
     pm.updateStage(slug, "outline", { status: "running" });
     state = pm.getState(slug);
     expect(state.stages[0].status).toBe("running");
-    expect(state.stages[4].status).toBe("pending");
+    expect(state.stages[5].status).toBe("pending");
 
     // Update another stage to done
     pm.updateStage(slug, "long-16x9", { status: "done" });
     state = pm.getState(slug);
     expect(state.stages[0].status).toBe("running");
-    expect(state.stages[4].status).toBe("done");
+    expect(state.stages[5].status).toBe("done");
   });
 
   it("updateStage throws for unknown stage", () => {

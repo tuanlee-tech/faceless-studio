@@ -139,8 +139,9 @@ export const api = {
     });
   },
 
-  async getQA(slug: string, gate: "pre" | "post" = "pre"): Promise<any> {
-    return request(`/projects/${slug}/qa?gate=${gate}`);
+  async getQA(slug: string, gate: "pre" | "post" = "pre", video?: string): Promise<any> {
+    const q = video ? `&video=${encodeURIComponent(video)}` : "";
+    return request(`/projects/${slug}/qa?gate=${gate}${q}`);
   },
 
   async getSpec(slug: string, file = "spec.json"): Promise<any> {

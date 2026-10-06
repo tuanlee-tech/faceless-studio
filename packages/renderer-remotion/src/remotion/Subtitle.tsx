@@ -16,7 +16,11 @@ export interface SubtitleChunk {
   endSec: number;
 }
 
-export function groupWordsIntoChunks(words: Word[], maxWordsPerLine = 6): SubtitleChunk[] {
+/**
+ * Chia danh sách từ thành các câu / vế ngắn gọn (hiển thị 1 câu / 1 dòng duy nhất tại một thời điểm).
+ * Tách ngay khi gặp dấu câu kết thúc (. ? ! ; … :), hoặc dấu phẩy khi đã có >= 4 từ, hoặc tối đa 6-7 từ.
+ */
+export function groupWordsIntoChunks(words: Word[], maxWordsPerLine = 7): SubtitleChunk[] {
   if (!words || words.length === 0) return [];
   const chunks: SubtitleChunk[] = [];
   let currentGroup: Word[] = [];
@@ -26,11 +30,21 @@ export function groupWordsIntoChunks(words: Word[], maxWordsPerLine = 6): Subtit
     currentGroup.push(word);
 
     const isLast = i === words.length - 1;
-    const reachedLimit = currentGroup.length >= maxWordsPerLine;
+    const cleanText = word.text.trim();
+    const isSentenceEnd = /[.?!;…]$/.test(cleanText);
+    const isClauseEnd = /[,:]$/.test(cleanText);
     const nextWord = !isLast ? words[i + 1] : null;
-    const hasPause = nextWord && nextWord.startSec - word.endSec > 0.4;
+    const hasPause = nextWord ? nextWord.startSec - word.endSec > 0.35 : false;
+    const reachedLimit = currentGroup.length >= maxWordsPerLine;
 
-    if (reachedLimit || hasPause || isLast) {
+    // Ngắt câu / vế tự nhiên:
+    if (
+      isSentenceEnd ||
+      (isClauseEnd && currentGroup.length >= 4) ||
+      reachedLimit ||
+      hasPause ||
+      isLast
+    ) {
       chunks.push({
         words: [...currentGroup],
         startSec: currentGroup[0].startSec,
@@ -63,31 +77,20 @@ export const Subtitle: React.FC<SubtitleProps> = ({
 
   const currentTime = frame / fps;
 
-  // Determine active words to display
+  // Luôn phân rã danh sách từ thành các câu / vế ngắn gọn (1 câu / dòng duy nhất)
+  const chunks = groupWordsIntoChunks(words, styleConfig.maxWordsPerLine ?? 7);
+
   let activeDisplayWords: Word[] = [];
 
-  if (captions.length > 0) {
-    const wordMap = new Map<string, Word>(words.map((w) => [w.id, w]));
-    for (const cap of captions) {
-      const capWords = cap.wordIds.map((id) => wordMap.get(id)).filter(Boolean) as Word[];
-      if (capWords.length > 0) {
-        const start = capWords[0].startSec;
-        const end = capWords[capWords.length - 1].endSec + 0.3;
-        if (currentTime >= start && currentTime <= end) {
-          activeDisplayWords = capWords;
-          break;
-        }
-      }
-    }
-  }
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    const nextChunk = i < chunks.length - 1 ? chunks[i + 1] : null;
+    // Giữ phụ đề hiển thị cho đến khi bắt đầu câu kế tiếp hoặc dứt câu + 0.3s
+    const bufferEnd = nextChunk ? nextChunk.startSec : chunk.endSec + 0.3;
 
-  if (activeDisplayWords.length === 0 && words.length > 0) {
-    const chunks = groupWordsIntoChunks(words, styleConfig.maxWordsPerLine ?? 6);
-    for (const chunk of chunks) {
-      if (currentTime >= chunk.startSec && currentTime <= chunk.endSec + 0.3) {
-        activeDisplayWords = chunk.words;
-        break;
-      }
+    if (currentTime >= chunk.startSec && currentTime < bufferEnd) {
+      activeDisplayWords = chunk.words;
+      break;
     }
   }
 
@@ -95,11 +98,11 @@ export const Subtitle: React.FC<SubtitleProps> = ({
     return null;
   }
 
-  const fontFamily = styleConfig.fontFamily ?? "system-ui, sans-serif";
-  const fontSize = styleConfig.fontSize ?? 48;
+  const fontFamily = styleConfig.fontFamily ?? "'Playfair Display', Georgia, serif";
+  const fontSize = styleConfig.fontSize ?? 44;
   const defaultColor = styleConfig.color ?? "#ffffff";
   const highlightColor = styleConfig.highlightColor ?? "#ffd700";
-  const bottomOffset = styleConfig.bottomOffset ?? 80;
+  const bottomOffset = styleConfig.bottomOffset ?? 90;
   const textTransform = styleConfig.textTransform ?? "none";
 
   return (
@@ -112,7 +115,7 @@ export const Subtitle: React.FC<SubtitleProps> = ({
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        padding: "0 60px",
+        padding: "0 40px",
         pointerEvents: "none",
         zIndex: 50,
       }}
@@ -120,16 +123,18 @@ export const Subtitle: React.FC<SubtitleProps> = ({
       <div
         style={{
           display: "flex",
-          flexWrap: "wrap",
+          flexWrap: "nowrap", // Hiển thị trên 1 dòng duy nhất, không rườm rà
           justifyContent: "center",
           alignItems: "center",
-          gap: "12px",
-          backgroundColor: "rgba(0, 0, 0, 0.45)",
-          padding: "12px 28px",
+          gap: "10px",
+          backgroundColor: "rgba(0, 0, 0, 0.65)",
+          padding: "14px 28px",
           borderRadius: "16px",
-          backdropFilter: "blur(6px)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          maxWidth: "85%",
+          backdropFilter: "blur(8px)",
+          border: "1px solid rgba(255, 255, 255, 0.15)",
+          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.7)",
+          maxWidth: "92%",
+          whiteSpace: "nowrap",
         }}
       >
         {activeDisplayWords.map((word) => {
@@ -146,12 +151,12 @@ export const Subtitle: React.FC<SubtitleProps> = ({
                 color: isActive ? highlightColor : defaultColor,
                 textTransform,
                 textShadow: isActive
-                  ? `0 0 16px ${highlightColor}66, 0 2px 4px rgba(0, 0, 0, 0.8)`
-                  : "0 2px 4px rgba(0, 0, 0, 0.8)",
+                  ? `0 0 16px ${highlightColor}80, 0 2px 4px rgba(0, 0, 0, 0.9)`
+                  : "0 2px 4px rgba(0, 0, 0, 0.9)",
                 transform: isActive ? "scale(1.08)" : "scale(1)",
-                transition: "none", // Golden rule #4: no CSS transitions
+                transition: "none", // Golden rule #4: Tất định
                 display: "inline-block",
-                lineHeight: 1.3,
+                lineHeight: 1.25,
               }}
             >
               {word.text}

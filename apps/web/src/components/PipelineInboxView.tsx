@@ -11,6 +11,7 @@ import {
   Wand2,
   ArrowRight,
   FileText,
+  Lightbulb,
 } from "lucide-react";
 import { api } from "../api/client.js";
 import type { ProjectState } from "../types/index.js";
@@ -320,7 +321,7 @@ export const PipelineInboxView: React.FC<PipelineInboxViewProps> = ({
           const nextStage = PIPELINE_STAGES[currIdx + 1];
           onNotify(
             "success",
-            `✅ Stage ${activeTask.stage.toUpperCase()} đạt chuẩn! 🚀 Đang tự động kích hoạt Stage tiếp theo: "${nextStage.toUpperCase()}"...`
+            `Stage ${activeTask.stage.toUpperCase()} đạt chuẩn! Đang tự động kích hoạt Stage tiếp theo: "${nextStage.toUpperCase()}"...`
           );
 
           try {
@@ -341,7 +342,7 @@ export const PipelineInboxView: React.FC<PipelineInboxViewProps> = ({
           // Spec completed
           onNotify(
             "success",
-            `🎉 Toàn bộ 4 giai đoạn Sáng tạo (Outline ➔ Script ➔ Direct ➔ Spec) đã hoàn tất 100%! Bạn có thể chuyển sang tab Storyboard & Assets hoặc TTS & Render để xuất video.`
+            `Toàn bộ 4 giai đoạn Sáng tạo (Outline ➔ Script ➔ Direct ➔ Spec) đã hoàn tất 100%! Bạn có thể chuyển sang tab Storyboard & Assets hoặc TTS & Render để xuất video.`
           );
           await loadData(activeTask.id);
           onRefreshProject();
@@ -615,7 +616,7 @@ export const PipelineInboxView: React.FC<PipelineInboxViewProps> = ({
                       disabled={isGeneratingAiJson}
                       className="text-left text-[11px] px-2.5 py-1 bg-slate-800/80 hover:bg-brand-900/40 text-slate-300 hover:text-brand-200 border border-slate-700 hover:border-brand-500/40 rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50"
                     >
-                      <span>💡</span>
+                      <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                       <span className="max-w-xs">{s}</span>
                     </button>
                   ))}

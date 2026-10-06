@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { unlink, copyFile, rename } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { probe, type LoudnessInfo } from "./ffmpeg.js";
 
@@ -160,9 +160,11 @@ export class LoudnessProcessor {
     }
 
     const nonce = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const tempAudioRaw = join(tmpdir(), `faceless-audio-raw-${nonce}.wav`);
-    const tempAudioNorm = join(tmpdir(), `faceless-audio-norm-${nonce}.wav`);
-    const tempMuxVideo = join(tmpdir(), `faceless-video-mux-${nonce}.mp4`);
+    // Place temp files in the same directory as finalOut to prevent EXDEV cross-device errors (e.g. C: temp vs E: project drive)
+    const workDir = dirname(finalOut);
+    const tempAudioRaw = join(workDir, `.temp-audio-raw-${nonce}.wav`);
+    const tempAudioNorm = join(workDir, `.temp-audio-norm-${nonce}.wav`);
+    const tempMuxVideo = join(workDir, `.temp-video-mux-${nonce}.mp4`);
 
     try {
       // 1. Extract audio
@@ -185,12 +187,11 @@ export class LoudnessProcessor {
       // 4. Mux audio back with video stream
       await this.muxAudio(videoPath, tempAudioNorm, tempMuxVideo);
 
-      // 5. Replace destination
-      if (finalOut === videoPath) {
-        await unlink(videoPath);
-        await rename(tempMuxVideo, finalOut);
-      } else {
-        await rename(tempMuxVideo, finalOut);
+      // 5. Replace destination safely:
+      // Never delete videoPath first! Overwrite finalOut with tempMuxVideo via copyFile, then remove tempMuxVideo.
+      if (existsSync(tempMuxVideo)) {
+        await copyFile(tempMuxVideo, finalOut);
+        await unlink(tempMuxVideo);
       }
 
       return finalOut;

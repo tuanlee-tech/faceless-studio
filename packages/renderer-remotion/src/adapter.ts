@@ -117,6 +117,23 @@ export class RemotionRendererAdapter implements RendererAdapter {
     }
   }
 
+  private imageFileToDataUri(filePath: string): string | undefined {
+    if (!existsSync(filePath)) return undefined;
+    try {
+      const ext = filePath.split(".").pop()?.toLowerCase();
+      let mime = "image/png";
+      if (ext === "jpg" || ext === "jpeg") mime = "image/jpeg";
+      else if (ext === "webp") mime = "image/webp";
+      else if (ext === "svg") mime = "image/svg+xml";
+      else if (ext === "gif") mime = "image/gif";
+
+      const buf = readFileSync(filePath);
+      return `data:${mime};base64,${buf.toString("base64")}`;
+    } catch {
+      return undefined;
+    }
+  }
+
   private resolveAudioFile(identifier: string, projectDir: string, type: "music" | "sfx" | "narration"): string | undefined {
     if (!identifier) return undefined;
     if (identifier.startsWith("data:") || identifier.startsWith("http:") || identifier.startsWith("https:")) {
@@ -212,6 +229,61 @@ export class RemotionRendererAdapter implements RendererAdapter {
     return audioSources;
   }
 
+  public resolveImageSources(spec: VideoSpec, projectDir: string): Record<string, string> {
+    const imageSources: Record<string, string> = {};
+
+    // 1. From manifest.json if exists
+    const manifestPath = resolve(projectDir, "assets/manifest.json");
+    if (existsSync(manifestPath)) {
+      try {
+        const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
+        for (const item of manifest.assets || []) {
+          if (item.filePath && item.kind === "image") {
+            const absPath = resolve(projectDir, item.filePath);
+            const uri = this.imageFileToDataUri(absPath);
+            if (uri) {
+              if (item.id) imageSources[item.id] = uri;
+              if (item.beatId) imageSources[item.beatId] = uri;
+              if (item.filePath) imageSources[item.filePath] = uri;
+            }
+          }
+        }
+      } catch {}
+    }
+
+    // 2. From spec beats assets
+    for (const ch of spec.chapters || []) {
+      for (const b of ch.beats || []) {
+        for (const asset of b.assets || []) {
+          if (asset.filePath) {
+            const absPath = resolve(projectDir, asset.filePath);
+            const uri = this.imageFileToDataUri(absPath);
+            if (uri) {
+              imageSources[asset.assetId] = uri;
+              imageSources[b.id] = uri;
+              imageSources[asset.filePath] = uri;
+            }
+          }
+        }
+        // Also check if b.id exists directly in assets/processed/ or assets/
+        if (!imageSources[b.id]) {
+          for (const ext of [".png", ".jpg", ".jpeg", ".webp"]) {
+            const testPath = resolve(projectDir, `assets/processed/${b.id}${ext}`);
+            if (existsSync(testPath)) {
+              const uri = this.imageFileToDataUri(testPath);
+              if (uri) {
+                imageSources[b.id] = uri;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return imageSources;
+  }
+
   async render(options: {
     specPath: string;
     format: FormatId;
@@ -223,7 +295,8 @@ export class RemotionRendererAdapter implements RendererAdapter {
     const templateConfig = this.templateManager.resolveTemplate(spec.templateId);
     const fontsCss = this.getFontsCss(templateConfig);
     const audioSources = this.resolveAudioSources(spec, dirname(options.specPath));
-    const inputProps = { spec, fontsCss, templateConfig, audioSources };
+    const imageSources = this.resolveImageSources(spec, dirname(options.specPath));
+    const inputProps = { spec, fontsCss, templateConfig, audioSources, imageSources };
 
     const compositionId = options.format === "short-9x16" ? "Short9x16" : "Long16x9";
     const bundleLocation = await this.getBundle();
@@ -254,7 +327,8 @@ export class RemotionRendererAdapter implements RendererAdapter {
     try {
       const loudnessProcessor = new LoudnessProcessor();
       await loudnessProcessor.processVideo(options.outPath, options.outPath);
-    } catch {
+    } catch (err: any) {
+      console.warn(`[RemotionRendererAdapter] Loudness normalization notice:`, err?.message || err);
       // In case video has no audio or is silent/mock, original video is preserved
     }
   }
@@ -269,7 +343,8 @@ export class RemotionRendererAdapter implements RendererAdapter {
     const templateConfig = this.templateManager.resolveTemplate(spec.templateId);
     const fontsCss = this.getFontsCss(templateConfig);
     const audioSources = this.resolveAudioSources(spec, dirname(options.specPath));
-    const inputProps = { spec, fontsCss, templateConfig, audioSources };
+    const imageSources = this.resolveImageSources(spec, dirname(options.specPath));
+    const inputProps = { spec, fontsCss, templateConfig, audioSources, imageSources };
 
     const compositionId = options.format === "short-9x16" ? "Short9x16" : "Long16x9";
     const bundleLocation = await this.getBundle();

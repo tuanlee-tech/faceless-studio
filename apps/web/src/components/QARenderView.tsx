@@ -43,12 +43,24 @@ export const QARenderView: React.FC<QARenderViewProps> = ({
   // Initial load: check if pre-qa or rendered video already exists
   useEffect(() => {
     // Check if dist video already exists
-    const videoUrl = api.getFileUrl(slug, "dist/long-16x9.mp4");
-    fetch(videoUrl, { method: "HEAD" })
-      .then((res) => {
-        if (res.ok) setRenderedVideoUrl(videoUrl);
-      })
-      .catch(() => {});
+    const candidates = [
+      api.getFileUrl(slug, "dist/long-16x9.mp4"),
+      api.getFileUrl(slug, "dist/shorts/short-1.mp4"),
+      api.getFileUrl(slug, `out/long-16x9/${slug}.mp4`),
+    ];
+
+    const checkCandidate = async () => {
+      for (const url of candidates) {
+        try {
+          const res = await fetch(url, { method: "HEAD" });
+          if (res.ok) {
+            setRenderedVideoUrl(`${url}?t=${Date.now()}`);
+            break;
+          }
+        } catch { }
+      }
+    };
+    checkCandidate();
   }, [slug]);
 
   // Run Pre-Render QA
@@ -73,10 +85,14 @@ export const QARenderView: React.FC<QARenderViewProps> = ({
   const handleRunPostQa = async () => {
     setIsRunningPostQa(true);
     try {
-      const report = await api.getQA(slug, "post");
+      const videoRelative =
+        selectedFormat === "short-9x16" ? "dist/shorts/short-1.mp4" : "dist/long-16x9.mp4";
+      const report = await api.getQA(slug, "post", videoRelative);
       setPostQaReport(report);
       if (report.passed) {
         onNotify("success", "✅ Post-Render QA: Chuẩn âm lượng -14 LUFS & thời lượng đạt chuẩn!");
+      } else {
+        onNotify("error", `Cảnh báo: Có ${report.summary?.errors || 1} lỗi QA cần xử lý.`);
       }
     } catch (err: any) {
       onNotify("error", `Lỗi chạy Post-QA: ${err.message}`);
@@ -106,24 +122,24 @@ export const QARenderView: React.FC<QARenderViewProps> = ({
           } else if (logData.type === "render_completed") {
             setRenderProgress(100);
           }
-        } catch {}
+        } catch { }
       });
 
       eventSource.onerror = () => {
         // SSE error or close
         if (eventSource) eventSource.close();
       };
-    } catch {}
+    } catch { }
 
     // 2. Invoke Render endpoint
     try {
       await api.render(slug, { format: selectedFormat });
       setRenderProgress(100);
-      onNotify("success", "🎉 Xuất video hoàn tất!");
+      onNotify("success", "Xuất video hoàn tất!");
 
       const videoRelative =
         selectedFormat === "short-9x16" ? "dist/shorts/short-1.mp4" : "dist/long-16x9.mp4";
-      const fullUrl = api.getFileUrl(slug, videoRelative);
+      const fullUrl = `${api.getFileUrl(slug, videoRelative)}?t=${Date.now()}`;
       setRenderedVideoUrl(fullUrl);
 
       onRefreshProject();
@@ -175,11 +191,10 @@ export const QARenderView: React.FC<QARenderViewProps> = ({
         {/* QA Report Summary Banner */}
         {preQaReport && (
           <div
-            className={`p-4 rounded-xl border space-y-3 ${
-              preQaReport.passed
-                ? "bg-emerald-950/30 border-emerald-800/50 text-emerald-300"
-                : "bg-rose-950/30 border-rose-800/50 text-rose-300"
-            }`}
+            className={`p-4 rounded-xl border space-y-3 ${preQaReport.passed
+              ? "bg-emerald-950/30 border-emerald-800/50 text-emerald-300"
+              : "bg-rose-950/30 border-rose-800/50 text-rose-300"
+              }`}
           >
             <div className="flex items-center justify-between text-xs font-semibold">
               <div className="flex items-center gap-2">
@@ -242,22 +257,20 @@ export const QARenderView: React.FC<QARenderViewProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedFormat("long-16x9")}
-                className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
-                  selectedFormat === "long-16x9"
-                    ? "bg-brand-500/20 text-brand-300 border-brand-500/40"
-                    : "bg-slate-900 text-slate-400 border-slate-800"
-                }`}
+                className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${selectedFormat === "long-16x9"
+                  ? "bg-brand-500/20 text-brand-300 border-brand-500/40"
+                  : "bg-slate-900 text-slate-400 border-slate-800"
+                  }`}
               >
                 16:9 Dài (long-16x9)
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedFormat("short-9x16")}
-                className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
-                  selectedFormat === "short-9x16"
-                    ? "bg-brand-500/20 text-brand-300 border-brand-500/40"
-                    : "bg-slate-900 text-slate-400 border-slate-800"
-                }`}
+                className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${selectedFormat === "short-9x16"
+                  ? "bg-brand-500/20 text-brand-300 border-brand-500/40"
+                  : "bg-slate-900 text-slate-400 border-slate-800"
+                  }`}
               >
                 9:16 Short (short-9x16)
               </button>
@@ -268,11 +281,10 @@ export const QARenderView: React.FC<QARenderViewProps> = ({
             type="button"
             onClick={handleStartRender}
             disabled={isRendering || isRenderBlocked}
-            className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${
-              isRenderBlocked
-                ? "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"
-                : "bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-brand-600/20"
-            }`}
+            className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold shadow-lg transition-all active:scale-95 ${isRenderBlocked
+              ? "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"
+              : "bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-brand-600/20"
+              }`}
           >
             {isRendering ? (
               <>
@@ -320,18 +332,20 @@ export const QARenderView: React.FC<QARenderViewProps> = ({
 
             <div className="rounded-xl overflow-hidden bg-black border border-slate-800 shadow-2xl aspect-video flex items-center justify-center">
               <video
+                key={renderedVideoUrl}
                 controls
+                playsInline
                 src={renderedVideoUrl}
                 className="w-full h-full object-contain"
               />
             </div>
 
             <div className="flex items-center justify-between text-xs text-slate-400">
-              <span className="font-mono">{renderedVideoUrl}</span>
+              <span className="font-mono max-w-[65%]">{renderedVideoUrl}</span>
               <a
                 href={renderedVideoUrl}
-                download
-                className="text-brand-400 hover:text-brand-300 font-medium"
+                download={`${slug}-${selectedFormat}.mp4`}
+                className="text-brand-400 hover:text-brand-300 font-medium shrink-0 ml-2"
               >
                 Tải tệp MP4 về máy
               </a>

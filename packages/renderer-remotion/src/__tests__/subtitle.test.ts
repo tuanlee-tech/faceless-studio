@@ -40,6 +40,22 @@ describe("Subtitle word-level timing & chunking", () => {
     expect(chunks[1].words.map((w) => w.text)).toEqual(["Việt", "Nam"]);
   });
 
+  it("splits chunks immediately at sentence boundary punctuation (. ? ! : ;)", () => {
+    const sentenceWords: Word[] = [
+      { id: "w01", text: "Bạn", startSec: 0.0, endSec: 0.3, confidence: 1.0 },
+      { id: "w02", text: "có", startSec: 0.3, endSec: 0.6, confidence: 1.0 },
+      { id: "w03", text: "hỏi?", startSec: 0.6, endSec: 0.9, confidence: 1.0 },
+      { id: "w04", text: "Tôi", startSec: 0.9, endSec: 1.2, confidence: 1.0 },
+      { id: "w05", text: "trả", startSec: 1.2, endSec: 1.5, confidence: 1.0 },
+      { id: "w06", text: "lời.", startSec: 1.5, endSec: 1.8, confidence: 1.0 },
+    ];
+
+    const chunks = groupWordsIntoChunks(sentenceWords, 7);
+    expect(chunks.length).toBe(2);
+    expect(chunks[0].words.map((w) => w.text)).toEqual(["Bạn", "có", "hỏi?"]);
+    expect(chunks[1].words.map((w) => w.text)).toEqual(["Tôi", "trả", "lời."]);
+  });
+
   it("handles empty words array gracefully", () => {
     const chunks = groupWordsIntoChunks([]);
     expect(chunks).toEqual([]);

@@ -282,3 +282,236 @@ Mỗi khi làm xong một task, sub-agent **BẮT BUỘC** phải tự kiểm tr
   1. Với các Stage không có task tĩnh (như `tts`), phải chủ động tiêm (inject) mock task vào danh sách Task Inbox trong React State để user có thể click chọn lại bất cứ lúc nào.
   2. Dùng điều kiện hiển thị UI phụ thuộc vào `activeTask.stage` (task đang chọn) thay vì trạng thái pending của dự án. Điều này đảm bảo trải nghiệm thống nhất với các task tĩnh.
   3. Khi một UI-driven stage hoàn tất (như click "Tạo Audio"), phải tự động chạy stage tiếp theo ngầm (`spec`) và báo hiệu rõ ràng cho user.
+
+---
+
+## 21. Tránh Dùng Emoji Thô trong Giao diện Web (Cross-Platform Emoji Rendering & Icon Standardization)
+
+- **Sai lầm đã mắc:**
+  - Dùng trực tiếp các ký tự Unicode Emoji mới như `🪄` (U+1FA84 - Magic Wand) hoặc `💡` trong JSX (`<span>🪄</span>`).
+  - Trên Windows 10/11 hoặc các môi trường font hệ thống thiếu bảng ký tự emoji mở rộng, các emoji này bị render thành ô vuông rỗng `[?]` hoặc icon biến dạng gây mất thẩm mỹ giao diện.
+- **Bài học & Quy tắc giải quyết:**
+  1. Tuyệt đối không dùng emoji thô trong mã JSX giao diện cho các biểu tượng chức năng hoặc nút bấm.
+  2. Luôn chuẩn hóa và sử dụng thư viện vector icon thống nhất (`lucide-react`) như `<Wand2 />`, `<Lightbulb />`, `<Sparkles />`, v.v.
+  3. Trong chuỗi văn bản thông báo Toast hoặc alert, ưu tiên dùng text tiếng Việt rõ nghĩa và icon vector đi kèm thay cho chuỗi emoji.
+
+---
+
+## 22. Tự Động Đồng Bộ Chế Độ Nghe Thử & Điều Hướng Voice Routing (Interactive TTS Preview Sync & Engine Mapping)
+
+- **Sai lầm đã mắc:**
+  - Trong `TTSGenerator.tsx`, khi người dùng đổi "Giọng đọc (Voice ID)", component chỉ cập nhật state `voiceId` mà không tự động phát sinh audio nghe thử mới. Người dùng click nghe lại vẫn phát ra file âm thanh của giọng cũ.
+  - Tầng server `tts-helper.ts` khi `model: "auto"` có API Key lại gửi toàn bộ voice sang Gemini API, khiến các giọng VieNeu ("Thiện Minh", "Hải Đăng"...) bị lỗi 400 và rớt xuống fallback Google Translate (giọng robot đơn điệu không đổi).
+- **Bài học & Quy tắc giải quyết:**
+  1. **Voice-Engine Smart Routing:** Ở backend, định nghĩa danh sách giọng cho từng engine (`GEMINI_VOICES = ["Kore", "Puck", ...]`, các giọng còn lại thuộc `VIENEU_VOICES`). Khi `model === "auto"`, tự động định tuyến giọng Gemini sang Gemini TTS và giọng VieNeu sang VieNeu-TTS local server (port 8000).
+  2. **Quyền phát âm thanh thuộc về người dùng (User-Initiated Preview):**
+     - Tuyệt đối không tự ý phát âm thanh khi mở phòng nghe thử hoặc khi người dùng thay đổi lựa chọn Voice ID / Model.
+     - Khi mở phòng nghe thử hoặc đổi giọng đọc, chỉ cập nhật trạng thái UI và hiển thị nút hành động "Nghe thử giọng [Voice ID]".
+     - Chỉ khi người dùng chủ động click nút "Nghe thử" / "Phát âm thanh" thì hệ thống mới kích hoạt phát audio.
+     - Thiết kế UI Phòng Nghe Thử thành một Studio độc lập, thoáng đãng với câu mẫu gợi ý, bộ đếm ký tự và thanh nghe nhạc riêng biệt thay vì chia đôi màn hình gây chật hẹp kịch bản chính.
+
+---
+
+## 23. Chuẩn Hóa Voice ID & Tránh Hallucinate Nhãn Giọng Đọc (Canonical Voice ID Presets vs. Fictional Aliases)
+
+- **Sai lầm đã mắc:**
+  - Frontend tự đặt các nhãn hiển thị giả định ("Nhật Phong", "Hoàng Nam", "Huyền My", "Kim Chi") và gán vào các ID thật của VieNeu (`Thiện Minh`, `Minh Đức`, `Ngọc Huyền`, `Trúc Ly`), khiến người dùng chọn một đằng nhưng hệ thống chạy một nẻo, gây sai lệch trải nghiệm.
+  - Tầng server gửi `voice: "default"` xuống VieNeu OpenAI API (`http://127.0.0.1:8000/v1/audio/speech`), dẫn đến lỗi `400 Bad Request: unknown voice 'default'` do VieNeu chỉ nhận danh sách ID giọng chính xác trong file `voices_v3_turbo.json`.
+- **Bài học & Quy tắc giải quyết:**
+  1. **Canonical Voice Mapping:** 100% Voice ID và nhãn hiển thị trong UI phải lấy trực tiếp từ nguồn chuẩn của VieNeu (`apps/vieneu-tts/src/vieneu/assets/voices_v3_turbo.json` và API `GET /v1/voices`). Tuyệt đối không tự bịa tên hay alias hiển thị.
+  2. **Giọng mặc định chuẩn (Hải Đăng):** VieNeu v3 turbo quy định `default_voice: "Hải Đăng"`. Cần đặt `Hải Đăng` làm giọng mặc định thay vì các giọng khác.
+  3. **Backend Fallback Normalization:** Tại `tts-helper.ts`, luôn chuẩn hóa:
+     ```ts
+     if (!voiceId || voiceId === "default") {
+       voiceId = "Hải Đăng";
+     }
+     ```
+     để dù client gửi `"default"` hay bỏ trống thì request tới VieNeu API vẫn luôn thành công (200 OK).
+  4. **Cung cấp API `/tts/voices`:** Server backend cung cấp endpoint `GET /tts/voices` để UI và client có thể lấy danh sách giọng động kèm mô tả vùng miền (Bắc/Trung/Nam) và phong cách đọc.
+
+
+---
+
+## 24. Tách Bạch AI Agent Sáng Tạo (Text/Emotion Directing) & Chuyển Đổi Tag Động Giữa Các TTS Engine
+
+- **Sai lầm đã mắc:**
+  - Hiểu nhầm nút "AI viết lại lời (Chèn cảm xúc)" là gọi trực tiếp tới server tổng hợp âm thanh (TTS synthesis). Thực chất, đây là công đoạn sáng tạo văn bản của **AI Agent Kịch Bản/Diễn Xuất (Voiceover Director)**, hoàn toàn tương tự như các stage Agent tự động suy ra JSON (`outline`, `script`, `direct`).
+  - Để lộ việc trộn lẫn thẻ cảm xúc: VieNeu Local chỉ hỗ trợ 3 thẻ tiếng Việt (`[cười]`, `[thở dài]`, `[hắng giọng]`), trong khi Gemini TTS dùng cú pháp thẻ tiếng Anh (`[enthusiasm]`, `<laugh>`, `<sigh>`, `<breath>`). Nếu gửi tag của Gemini sang VieNeu, VieNeu sẽ đọc to cả cụm chữ tiếng Anh hoặc bỏ qua sai lệch.
+- **Bài học & Quy tắc giải quyết:**
+  1. **Tách biệt Text Director và Audio Synthesis:**
+     - Nút "Agent Sáng Tạo: Chèn Tag Cảm Xúc Bằng AI" chỉ gửi prompt tới AI Agent để tối ưu lời thoại và chèn thẻ cảm xúc phù hợp ngữ cảnh, KHÔNG tổng hợp file âm thanh tại bước này.
+  2. **Ràng buộc cú pháp nghiêm ngặt theo từng Engine:**
+     - Nếu user đang chọn giọng VieNeu: Prompt chỉ định AI tuyệt đối chỉ được dùng 3 thẻ `[cười]`, `[thở dài]`, `[hắng giọng]`.
+     - Nếu user chọn giọng Gemini: Prompt chỉ định dùng thẻ `[enthusiasm]`, `[sadness]`, `<laugh>`, `<sigh>`, `<breath>`.
+  3. **Lắng nghe sự kiện chuyển giọng (On-the-fly Tag Migration):**
+     - Khi user chuyển `voiceId` hoặc `model` giữa VieNeu và Gemini, component tự động phát hiện đổi engine (`prevEngine !== nextEngine`) và chạy hàm chuyển đổi tag hai chiều (`convertEmotionTags`) trên cả văn bản kịch bản chính và văn bản phòng nghe thử, đồng thời hiển thị thông báo hỗ trợ cho người dùng.
+
+---
+
+## 25. Quản Lý Gemini Model Lifecycle, DNS IPv4 First & Cơ Chế Dự Phòng Fail-Safe
+
+- **Sai lầm đã mắc:**
+  - Hardcode endpoint `gemini-1.5-flash` trong code backend khiến server nhận lỗi `404 Not Found` do Google đã ngừng hỗ trợ model cũ trên API v1beta.
+  - Trên hệ điều hành Windows, thư viện fetch (Undici) mặc định phân giải địa chỉ IPv6 trước, dẫn tới lỗi `UND_ERR_CONNECT_TIMEOUT` treo 10 giây khi router hoặc mạng nội bộ không định tuyến IPv6 tới máy chủ Google.
+  - Khi API ngoài lỗi hoặc chưa cấu hình API Key, server trả về mã lỗi 500 khiến UI hiển thị banner đỏ và block toàn bộ thao tác của người dùng.
+- **Bài học & Quy tắc giải quyết:**
+  1. **Cấu hình `dns.setDefaultResultOrder('ipv4first')`:**
+     - Luôn gọi thiết lập này tại điểm khởi động server (`apps/server/src/index.ts`) để đảm bảo mọi lệnh `fetch` đi qua IPv4 nhanh chóng, loại bỏ hoàn toàn nguy cơ timeout IPv6 trên Windows.
+  2. **Chuỗi mô hình dự phòng (Candidate Fallback Cascade):**
+     - Luôn chuẩn bị danh sách mô hình hiện đại có khả năng thay thế nhau: `["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.5-flash"]` thông qua SDK `@google/genai`.
+  3. **Cơ chế Fail-Safe Thông Minh (Smart Rule-Based Enhancer):**
+     - Nếu không có API Key hoặc tất cả các model đều gặp sự cố, server không được văng lỗi 500. Thay vào đó, tự động kích hoạt bộ phân tích cấu trúc câu tiếng Việt để chèn các thẻ cảm xúc tự nhiên theo đúng chuẩn engine đang chọn, bảo toàn tính liên tục của trải nghiệm người dùng.
+
+
+---
+
+## 26. Phân Rã Lời Thoại Thành Từng Chunk Nhỏ Cho TTS, Chuẩn Hóa MP3 & Tránh Chuyển Màn Hình Quá Sớm
+
+- **Sai lầm đã mắc:**
+  - Khi người dùng bấm "Tạo Audio (TTS)", hệ thống gọi hàm `onComplete()` ngay lập tức sau khi nhận kết quả thành công, khiến `PipelineInboxView` tự động chuyển `activeTask` sang stage kế tiếp (`spec`). Hậu quả là giao diện phát âm thanh biến mất ngay, người dùng không kịp nghe thử file MP3 vừa tạo hay kiểm tra chất lượng giọng đọc.
+  - Gửi toàn bộ khối văn bản dài trong một lượt gọi TTS duy nhất có thể gây nghẽn bộ nhớ, trễ timeout hoặc lỗi ngữ điệu trên các mô hình TTS địa phương (local ONNX).
+- **Bài học & Quy tắc giải quyết:**
+  1. **Chia nhỏ văn bản thành từng chunk (Sentence/Clause Chunking):**
+     - Viết hàm `splitTextIntoChunks` chia kịch bản theo đoạn (`\n`), kết thúc câu (`.!?…`) và các vế câu dài (`,;:`) với giới hạn ~20 từ/chunk.
+     - Giữ nguyên các tag cảm xúc đi kèm trong chunk.
+     - Thực thi tuần tự/song song từng chunk ngắn (mỗi chunk VieNeu chỉ mất ~35ms) rồi ghép nối PCM buffer theo đúng chuẩn cấu trúc WAV.
+  2. **Chuẩn hóa xuất file MP3 qua FFmpeg:**
+     - Sử dụng `ffmpeg` để tự động nén `narration.wav` sang `narration.mp3` (192kbps).
+     - Lưu trữ cả hai định dạng: `.mp3` để phát mượt mà trên mọi trình duyệt web và người dùng tải về; `.wav` để Remotion dựng video và căn chỉnh word alignment chính xác.
+  3. **Quyền kiểm soát xem xét của người dùng (User-Verified Review Before Progression):**
+     - Tuyệt đối không gọi `onComplete()` tự động đóng màn hình TTS.
+     - Giữ người dùng ở lại giao diện TTS, hiển thị Card Player MP3 hoàn chỉnh với thông số thời lượng, số lượng chunks, giọng đọc, nút Tải file MP3 và nút rõ ràng: "Chấp nhận Audio & Tiếp tục sang Stage SPEC".
+  4. **Hiển thị lỗi rõ ràng (Clear Error Alert Box):**
+     - Nếu có lỗi trong quá trình tạo audio (400, 500, lỗi kết nối port 8000), hiển thị khung cảnh báo màu đỏ với nội dung lỗi cụ thể, hướng dẫn khắc phục và nút "Thử lại" ngay tại chỗ.
+
+
+---
+
+## 27. Quản Lý Rate Limit Gemini TTS (429 RESOURCE_EXHAUSTED) & Cơ Chế Phục Hồi 1-Click Sang VieNeu Local
+
+- **Sai lầm đã mắc:**
+  - Mô hình Gemini TTS Cloud (`gemini-3.8-flash-tts`) trên gói Google Cloud Free Tier bị giới hạn nghiêm ngặt chỉ **10 yêu cầu/ngày**. Khi vượt quá, Google trả về lỗi `429 RESOURCE_EXHAUSTED` yêu cầu chờ nhiều giờ (`retry in 9h`).
+  - Ban đầu, code backend bắt lỗi này và rethrow trực tiếp (`if (model === "gemini") throw err;`), đồng thời nếu rơi vào fallback thì lại truyền Voice ID của Gemini (`Kore`, `Puck`...) vào VieNeu, khiến VieNeu văng lỗi `400: unknown voice 'Kore'` và văng cả khối JSON thô 50 dòng ra giao diện người dùng.
+- **Bài học & Quy tắc giải quyết:**
+  1. **Tự động Fallback sang VieNeu Local khi Gemini chạm 429 Quota:**
+     - Khi `generateGeminiFlashTTS` gặp lỗi `429` / `RESOURCE_EXHAUSTED`, backend không được dừng tiến trình.
+     - Tự động bắt lỗi quota, chuẩn hóa Voice ID sang giọng mặc định của VieNeu (`Hải Đăng`) và gọi `generateVieNeuTTS` chạy cục bộ.
+     - Trả về kết quả âm thanh thành công (`200 OK`) kèm `warning` thông báo đã tự động chuyển sang VieNeu Local để người dùng nắm rõ.
+  2. **Giao diện tự phục hồi 1-Click (Self-Healing Quota Recovery UI):**
+     - Ở frontend, phát hiện các chuỗi lỗi chứa `429`, `quota`, `RESOURCE_EXHAUSTED`.
+     - Thay thế khung lỗi đỏ đáng sợ bằng **Amber Card thân thiện** giải thích rõ giới hạn 10 lượt/ngày của Gemini.
+     - Cung cấp nút bấm phục hồi 1-click: **"👉 Chuyển sang VieNeu (Hải Đăng) & Tạo ngay"** để tự động đổi model, chuyển voice, đồng bộ lại thẻ cảm xúc và kích hoạt tạo audio ngay lập tức.
+
+---
+
+## 28. Xử Lý Tag Cảm Xúc Khi Fallback (Tránh Đọc "Dấu Nhỏ Hơn, Dấu Lớn Hơn") & Đồng Bộ Giao Diện Toàn Diện
+
+- **Sai lầm đã mắc:**
+  - Khi hệ thống tự động fallback từ Gemini sang VieNeu Local (do lỗi 429 Quota Exceeded), kịch bản gốc vẫn còn chứa các thẻ cảm xúc của Gemini dạng XML/HTML (`<sigh>`, `<laugh>`, `<breath>`).
+  - Bộ âm tiết hóa / tokenizer tiếng Việt của VieNeu khi gặp ký tự `<` và `>` sẽ đọc to thành chữ: *"dấu nhỏ hơn sigh dấu lớn hơn"* (hoặc *"dấu bé hơn..."*), làm hỏng hoàn toàn trải nghiệm lồng tiếng.
+  - Đồng thời, UI không được đồng bộ: ô chọn giọng (Voice ID) vẫn hiển thị giọng Gemini (`Kore`), ô Model vẫn hiển thị `gemini`, và khung kịch bản (textarea) vẫn giữ các thẻ `<sigh>`, khiến người dùng hoang mang không biết thực chất hệ thống đang đọc bằng giọng gì và tại sao kết quả lại khác biệt.
+- **Bài học & Quy tắc giải quyết:**
+  1. **Làm sạch triệt để thẻ cảm xúc khi Fallback (Sanitize Emotion Tags on Fallback):**
+     - Viết hàm `stripAllEmotionTags(text)` sử dụng regex loại bỏ toàn bộ các thẻ `<[^>]+>` và các thẻ đóng mở ngoặc `\[[^\]]*\]`.
+     - Dọn dẹp dấu cách thừa trước các dấu câu (`,.!?;…`) và khoảng trắng đôi.
+     - Tại `tts-helper.ts`, khi kích hoạt fallback sang VieNeu, bắt buộc gán `textForVieNeu = stripAllEmotionTags(text)`, đảm bảo file âm thanh tạo ra hoàn toàn không chứa bất kỳ từ phát âm dấu nào.
+     - Sử dụng `cleanedText` này cho cả việc sinh phụ đề SRT và word timing để đồng bộ với âm thanh.
+  2. **Đồng bộ hóa 100% trạng thái giao diện người dùng (Full UI State Synchronization):**
+     - Endpoint trả về cờ `isFallback: true`, `fallbackVoice`, `fallbackModel`, `cleanedText`, và `warning`.
+     - Tại Frontend (`handleGenerateTts` và `handlePreviewTts`), khi nhận `isFallback`:
+       - Cập nhật dropdown Voice ID: `setVoiceId(data.fallbackVoice)`.
+       - Cập nhật dropdown Model: `setTtsModel(data.fallbackModel)`.
+       - Cập nhật textarea kịch bản: `setTtsText(data.cleanedText)` (hoặc `setPreviewText(data.cleanedText)`).
+       - Cập nhật metadata hiển thị đúng giọng đọc thực tế (`fallbackVoice`).
+  3. **Hiển thị Banner Cảnh Báo Rõ Ràng ở Cuối Giao Diện (Prominent Fallback Reason Banner):**
+     - Đặt một Amber Warning Banner ở cuối trang giải thích chi tiết:
+       - Lý do chuyển hướng: Gemini Cloud hết hạn mức miễn phí trong ngày (429 Quota Exceeded).
+       - Hành động hệ thống: Đã tự động đổi sang VieNeu Local và làm sạch thẻ cảm xúc để tránh phát âm lỗi.
+       - Trạng thái đồng bộ: Thông báo rõ cho người dùng biết các ô nhập liệu phía trên đã được tự động cập nhật phản ánh đúng thực tế.
+
+---
+
+## 29. Khắc Phục Mất File Video Sau Render (EXDEV Cross-Device Move), An Toàn Thay Thế Tệp & Hỗ Trợ HTTP Range Streaming
+
+- **Sai lầm đã mắc:**
+  - Sau khi Remotion kết xuất video hoàn tất (`100%`), người dùng vào màn hình QA & Render thì không xem được video, thông báo *"Rendered MP4 file not found"*, file trên đĩa hoàn toàn biến mất.
+  - **Gốc rễ 1 — Lỗi `EXDEV: cross-device link not permitted`:**
+    Trong `LoudnessProcessor.processVideo`, các file tạm (`tempMuxVideo`) được đặt tại `os.tmpdir()` (thường nằm ở ổ `C:\Users\...\AppData\Local\Temp`), trong khi thư mục dự án nằm ở ổ đĩa khác (`E:\faceless-studio`). Trên hệ điều hành Windows, lệnh `fs.promises.rename` giữa hai ổ đĩa khác nhau **luôn ném lỗi `EXDEV`**.
+  - **Gốc rễ 2 — Xóa file gốc trước khi file đích sẵn sàng:**
+    Code thực hiện `await unlink(videoPath)` trước khi gọi `await rename(tempMuxVideo, finalOut)`. Khi `rename` văng lỗi `EXDEV`, khối `finally` dọn dẹp và xóa luôn cả file `tempMuxVideo` ở ổ `C:`. Khối `catch` ở `RemotionRendererAdapter` bắt lỗi ngầm. Hậu quả là cả 2 bản sao video đều bị xóa sạch, biến mất khỏi ổ đĩa!
+  - **Gốc rễ 3 — Thiếu Range Request cho thẻ `<video>`:**
+    Endpoint `/projects/:slug/files/*` trước đây đọc toàn bộ file bằng `readFileSync`, không hỗ trợ `Accept-Ranges: bytes` và mã `206 Partial Content`. Trình duyệt web (Chrome/Safari) khi phát video HTML5 gửi header `Range: bytes=0-` để tua hoặc đệm dữ liệu; nếu server trả về mã 200 trơn hoặc không có Range, trình phát sẽ không tua được hoặc báo lỗi hỏng file.
+  - **Gốc rễ 4 — Lỗi kiểu dữ liệu duration từ `ffprobe`:**
+    `ffprobe` trả về chuỗi `"3.033333"` trong JSON format, hàm `getDuration` không gọi `parseFloat`, dẫn tới `actualDuration.toFixed is not a function` khi kiểm tra QA Gate.
+- **Bài học & Quy tắc giải quyết:**
+  1. **Tạo file tạm cùng thư mục với file đích (Same-Directory Temp Files):**
+     - Luôn sử dụng `workDir = dirname(finalOut)` để tạo các file mux tạm `.temp-video-mux-${nonce}.mp4`. Điều này đảm bảo 100% file tạm và file kết quả nằm trên cùng một ổ đĩa / phân vùng, triệt tiêu hoàn toàn lỗi `EXDEV`.
+  2. **An toàn thay thế tệp (Safe In-Place Overwrite with `copyFile`):**
+     - Tuyệt đối KHÔNG xóa file gốc (`unlink(videoPath)`) trước khi file mới được ghi thành công.
+     - Sử dụng `await copyFile(tempMuxVideo, finalOut)` để ghi đè an toàn lên đích đến, sau đó mới xóa file tạm `tempMuxVideo`. Nếu có bất kỳ sự cố nào xảy ra trong quá trình xử lý âm thanh, file video render gốc vẫn được bảo toàn nguyên vẹn.
+  3. **Chuẩn hóa HTTP 206 Partial Content & HEAD Request cho Video Streaming:**
+     - Tại `apps/server/src/app.ts`, cấu hình endpoint `app.on(["GET", "HEAD"], "/projects/:slug/files/*")`.
+     - Bắt header `range`, phân rã `start` và `end`, trả về mã `206 Partial Content`, header `Content-Range: bytes ${start}-${end}/${fileSize}`, `Accept-Ranges: bytes` và stream nội dung bằng `createReadStream(fullPath, { start, end })`.
+     - Hỗ trợ đầy đủ phương thức `HEAD` với `Content-Length` và `Accept-Ranges` để frontend kiểm tra tệp tồn tại nhanh chóng mà không tốn băng thông.
+  4. **Chống Cache Stale trên Frontend:**
+     - Khi gán `renderedVideoUrl`, luôn gắn query timestamp `?t=${Date.now()}` và gán thuộc tính `key={renderedVideoUrl}` cùng `playsInline` trên thẻ `<video>`. Điều này buộc React và trình duyệt nạp lại bitstream mới nhất thay vì giữ cache của lần render cũ.
+  5. **Ép kiểu số thực từ FFprobe:**
+     - Trong `ffmpeg.ts`, luôn gọi `parseFloat(result.format.duration)` để đảm bảo giá trị trả về là kiểu `number` chuẩn, ngăn chặn lỗi `toFixed is not a function`.
+
+
+
+
+---
+
+## 30. Khắc Phục Lệch Khớp Âm Thanh - Video (Audio-Video Desync) & Hiển Thị Visual Assets Trong Remotion Layouts
+
+- **Sai lầm đã mắc:**
+  - **Lệch thời lượng nghiêm trọng giữa Audio và Video:**
+    - Kịch bản âm thanh được tạo ở bước TTS có độ dài thực tế **20.96 giây** (95 từ). Tuy nhiên, `spec.json` lại chứa `durationSec: 31` và word timestamps giả định (0.3s/từ) do bước tạo spec trước đó sinh ra một cách độc lập mà không đồng bộ ngược lại với `results/tts.json`.
+    - Hậu quả: Video dài 31 giây trong khi audio đã dứt ở 20.96 giây, dẫn tới hơn 10 giây im lặng chết chóc ở cuối video, đồng thời phụ đề karaoke chạy lệch hoàn toàn so với giọng nói phát ra.
+  - **Video trống trơn, không có hình ảnh minh họa (Missing Visual Assets):**
+    - Mặc dù ảnh minh họa đã được sinh và lưu trữ đầy đủ trong `assets/processed/b1.png`..`b4.png` và đăng ký trong `assets/manifest.json`, nhưng các beat trong `spec.json` vẫn có `assets: []`.
+    - `RemotionRendererAdapter` chỉ giải quyết đường dẫn âm thanh thành Data URI (`audioSources`), nhưng hoàn toàn không giải quyết các tệp ảnh (`imageSources`). Do Remotion chạy trong headless Chromium sandbox, Chromium không thể tự truy cập trực tiếp các đường dẫn tệp tương đối trên ổ đĩa.
+    - Các Remotion layout (`BaroqueMonoLayout`, `CleanSplitLayout`, `MinimalLayout`) ở Phase 1 chỉ vẽ khung chữ tĩnh hoặc placeholder giả lập (`"Visual Showcase"`), chưa tính toán `activeBeat` theo thời gian hiện tại (`frame / fps`) và chưa nhúng `<Img />`.
+- **Bài học & Quy tắc giải quyết:**
+  1. **Đồng bộ tuyệt đối giữa TTS Audio và VideoSpec (Luật vàng #1 & #3):**
+     - Tại `POST /projects/:slug/tts/generate`: Khi sinh xong `results/tts.json`, tự động đồng bộ ngay vào `spec.json.narration` (`durationSec`, `audioPath`, `words`) và tự động chia lại dải từ (`range: { startWordId, endWordId }`) cùng `captions` của các beats.
+     - Tại `POST /projects/:slug/render`: Trước khi dựng video, tự động kiểm tra đối chiếu `spec.json` với `results/tts.json`. Nếu phát hiện lệch thời lượng hoặc danh sách từ, tự động đồng bộ lại ngay lập tức.
+     - Tại `ai-helper.ts` (case `"spec"`): Ưu tiên đọc trực tiếp từ `results/tts.json` và `assets/manifest.json` trên đĩa thay vì tính toán giả định.
+  2. **Nạp ảnh Asset thành Base64 Data URIs (`resolveImageSources`):**
+     - Tại `RemotionRendererAdapter`, hiện thực `imageFileToDataUri` và `resolveImageSources`. Tự động quét từ `assets/manifest.json`, `beat.assets` và thư mục `assets/processed/`, chuyển đổi tất cả hình ảnh thành Base64 Data URI (`data:image/png;base64,...`) và truyền vào `inputProps.imageSources`.
+     - Giải pháp Data URI hoạt động 100% tất định và độc lập trên mọi nền tảng (Windows / Linux) mà không phụ thuộc vào web server tĩnh ngoài.
+  3. **Tính toán Active Beat & Chuyển động Camera Tất định trong Remotion (Luật vàng #4):**
+     - Xây dựng helper `getActiveBeatInfo(spec, currentTime, imageSources)`:
+       - Tính `currentTime = frame / fps`.
+       - Dựa vào `startSec` của `startWordId` và `endSec` của `endWordId` để xác định beat đang phát.
+       - Tính toán `cameraScale` bằng `interpolate(beatProgress, [0, 1], [1.0, 1.08], { extrapolateRight: "clamp" })` phục vụ hiệu ứng Ken Burns zoom chậm điện ảnh chuẩn Caravaggio chiaroscuro.
+  4. **Cập nhật Toàn diện Các Template Layout:**
+     - `BaroqueMonoLayout`: Vẽ ảnh beat nền toàn màn hình với hiệu ứng Ken Burns, lớp phủ gradient chiaroscuro huyền bí, tương phản cao, làm nổi bật viền hoa văn vàng kim cổ điển và phụ đề karaoke từ-theo-từ.
+     - `CleanSplitLayout`: Nhúng ảnh beat với Ken Burns và ghi chú đạo diễn vào thẻ visual card thay thế placeholder cũ.
+     - `MinimalLayout`: Nhúng ảnh beat nền mờ tối tinh tế giúp chữ nổi bật.
+  5. **Đạt Chuẩn 100% QA Gates (Pre & Post Render):**
+     - `runPreRenderQA`: Schema hợp lệ, asset file tồn tại trên đĩa, đăng ký đầy đủ license (`CC0`) trong manifest, audio và word confidence >= 0.8 (0 lỗi, 0 cảnh báo).
+     - `runPostRenderQA`: Thời lượng MP4 khớp 100% thời lượng audio TTS (`20.96s`), độ lệch = 0s (< 2.0s tolerance), chuẩn loudness -14 LUFS YouTube (0 lỗi, 0 cảnh báo).
+
+
+---
+
+## 31. Loại Bỏ Triệt Để Các Phần Tử Demo/Debug Trên Video & Chuẩn Hóa Phụ Đề Ngắt 1 Câu Ngắn Gọn
+
+- **Sai lầm đã mắc:**
+  - **Dính các phần tử demo/debug giữa khung hình video:**
+    - Trong giai đoạn Phase 1 thử nghiệm, các template layout (`BaroqueMonoLayout`, `CleanSplitLayout`, `MinimalLayout`) được gắn các trường văn bản phục vụ test: tiêu đề stage (`"Tổng hợp thành spec hoàn chỉnh"`), số frame (`FRAME 183`), mã beat (`BEAT B2`), số giây (`6.1s`), và trích dẫn ghi chú đạo diễn (`directorNote`) ngay chính giữa màn hình.
+    - Khi render video sản phẩm thực tế, các chữ demo này che lấp toàn bộ trung tâm bức tranh minh họa nghệ thuật, gây rối mắt và làm video giống bản demo kỹ thuật thay vì tác phẩm video faceless chuyên nghiệp cho người xem thật.
+  - **Phụ đề hiển thị quá dài, tràn 2 dòng nhiều câu:**
+    - Phụ đề ban đầu gộp toàn bộ 24 từ của một beat vào một khối, khiến trên màn hình cùng lúc hiển thị cả 2 câu khác nhau (ví dụ: *"đến mức ám ảnh chúng ta đến vậy? Trong thực tế, hầu hết chúng ta đều từng trải qua..."*), trải dài trên 2 dòng gây mỏi mắt người xem.
+- **Bài học & Quy tắc giải quyết:**
+  1. **Loại bỏ 100% các phần tử Demo / Debug / Stage Title trên video thành phẩm:**
+     - Xóa hoàn toàn các thẻ tiêu đề stage, chapter header, số frame, mã beat, số giây, và ghi chú đạo diễn khỏi các layout component (`BaroqueMonoLayout`, `CleanSplitLayout`, `MinimalLayout`).
+     - Video chỉ giữ lại: tranh minh họa nghệ thuật toàn màn hình với hiệu ứng Ken Burns zoom chậm điện ảnh, viền hoa văn phong cách template (nếu có), và phụ đề karaoke thanh lịch ở đáy màn hình.
+  2. **Phân rã phụ đề tự nhiên theo dấu câu (1 câu / 1 vế trên 1 dòng duy nhất):**
+     - Tại `groupWordsIntoChunks` trong `Subtitle.tsx`:
+       - Tự động ngắt câu ngay lập tức khi từ kết thúc bằng các dấu câu ngắt câu (`.`, `?`, `!`, `;`, `…`, `:`).
+       - Ngắt vế tại dấu phẩy `,` nếu cụm từ đã tích lũy từ 4 từ trở lên.
+       - Giới hạn tối đa 6-7 từ mỗi dòng, ngăn chặn triệt để hiện tượng tràn thành 2 dòng bằng `flexWrap: "nowrap"`.
+       - Giữ hiển thị phụ đề mượt mà cho đến khi câu tiếp theo bắt đầu, tránh hiện tượng chữ biến mất giật cục trong các khoảng dừng thở ngắn.

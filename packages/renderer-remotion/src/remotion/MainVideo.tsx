@@ -10,6 +10,7 @@ export interface MainVideoProps {
   fontsCss?: string;
   templateConfig?: TemplateConfig;
   audioSources?: AudioSources;
+  imageSources?: Record<string, string>;
 }
 
 const DEFAULT_FALLBACK_TEMPLATE: TemplateConfig = {
@@ -39,7 +40,13 @@ const DEFAULT_FALLBACK_TEMPLATE: TemplateConfig = {
   motionPresets: ["fade-in"],
 };
 
-export const MainVideo: React.FC<MainVideoProps> = ({ spec, fontsCss, templateConfig, audioSources }) => {
+export const MainVideo: React.FC<MainVideoProps> = ({
+  spec,
+  fontsCss,
+  templateConfig,
+  audioSources,
+  imageSources,
+}) => {
   const resolvedTemplate: TemplateConfig = templateConfig || DEFAULT_FALLBACK_TEMPLATE;
   const templateId = spec?.templateId || resolvedTemplate.id;
 
@@ -48,11 +55,11 @@ export const MainVideo: React.FC<MainVideoProps> = ({ spec, fontsCss, templateCo
       {fontsCss && <style dangerouslySetInnerHTML={{ __html: fontsCss }} />}
       <AudioMixer spec={spec} audioSources={audioSources} />
       {templateId === "baroque-mono" ? (
-        <BaroqueMonoLayout spec={spec} templateConfig={resolvedTemplate} />
+        <BaroqueMonoLayout spec={spec} templateConfig={resolvedTemplate} imageSources={imageSources} />
       ) : templateId === "clean-split" ? (
-        <CleanSplitLayout spec={spec} templateConfig={resolvedTemplate} />
+        <CleanSplitLayout spec={spec} templateConfig={resolvedTemplate} imageSources={imageSources} />
       ) : (
-        <MinimalLayout spec={spec} templateConfig={resolvedTemplate} />
+        <MinimalLayout spec={spec} templateConfig={resolvedTemplate} imageSources={imageSources} />
       )}
     </>
   );

@@ -389,7 +389,8 @@ export class QAManager {
 
     // 3. Duration check
     try {
-      const actualDuration = await mediaInspector.probeDuration(videoPath);
+      const rawDuration = await mediaInspector.probeDuration(videoPath);
+      const actualDuration = typeof rawDuration === "number" ? rawDuration : parseFloat(String(rawDuration));
       let expectedDuration = options.expectedDuration;
 
       if (expectedDuration === undefined) {

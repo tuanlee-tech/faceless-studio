@@ -59,25 +59,33 @@ CRITICAL RULES FOR SCENES AND VISUAL PROMPTS:
 `;
   const promptBody = `You are an expert video director. Based on user prompt: "${userPrompt}", generate video ${stage} configuration in Vietnamese.\n\n${rules}\n\n${instruction}\nContext from previous steps: ${JSON.stringify(previousResults)}\nReturn ONLY pure JSON, no markdown backticks, no comments.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: promptBody }] }],
-      generationConfig: { responseMimeType: "application/json" },
-    }),
-  });
+  const { GoogleGenAI } = await import("@google/genai");
+  const ai = new GoogleGenAI({ apiKey });
+  const CANDIDATE_MODELS = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.5-flash"];
+  let lastError: any = null;
 
-  if (!response.ok) {
-    throw new Error(`Gemini API returned status ${response.status}`);
+  for (const model of CANDIDATE_MODELS) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: promptBody,
+        config: {
+          responseMimeType: "application/json",
+        },
+      });
+
+      const rawText = response.text;
+      if (rawText) {
+        const cleaned = rawText.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "").trim();
+        return JSON.parse(cleaned);
+      }
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`[AI-Helper] Gemini model ${model} failed, trying next fallback:`, err.message);
+    }
   }
 
-  const data: any = await response.json();
-  const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!rawText) throw new Error("Empty response from Gemini");
-
-  return JSON.parse(rawText);
+  throw lastError || new Error("Failed to generate content with Gemini models");
 }
 
 function smartGenerateJson(
@@ -227,24 +235,57 @@ function smartGenerateJson(
     case "spec": {
       const script = previousResults.script;
       const direct = previousResults.direct;
-      const wordsText = script?.content || `Khám phá bí mật về ${title} và những bài học đắt giá cho cuộc sống`;
-      const tokens = wordsText.split(/\s+/).filter(Boolean);
-      let currentTime = 0;
-      const wordList = tokens.map((tok: string, idx: number) => {
-        const start = Math.round(currentTime * 100) / 100;
-        const dur = Math.max(0.3, Math.min(0.7, tok.length * 0.08));
-        currentTime += dur;
-        const end = Math.round(currentTime * 100) / 100;
-        return {
-          id: `w${idx + 1}`,
-          text: tok,
-          startSec: start,
-          endSec: end,
-          confidence: 0.98,
-        };
-      });
+      const slug = previousResults.slug || "demo-project";
+      const projDir = resolve(process.cwd(), "projects", slug);
 
-      const totalDuration = Math.ceil(currentTime) + 1;
+      let wordList: any[] = [];
+      let totalDuration = 0;
+      let audioPath = "audio/narration.mp3";
+
+      // 1. Try from previousResults.tts or disk results/tts.json
+      let ttsSource = previousResults.tts;
+      if (!ttsSource && existsSync(resolve(projDir, "results/tts.json"))) {
+        try {
+          ttsSource = JSON.parse(readFileSync(resolve(projDir, "results/tts.json"), "utf-8"));
+        } catch {}
+      }
+
+      if (ttsSource && ttsSource.words && ttsSource.words.length > 0) {
+        wordList = ttsSource.words;
+        totalDuration = ttsSource.durationSec || wordList[wordList.length - 1].endSec;
+        audioPath = ttsSource.audioPath || (existsSync(resolve(projDir, "audio/narration.mp3")) ? "audio/narration.mp3" : "audio/narration.wav");
+      } else {
+        const wordsText = script?.content || `Khám phá bí mật về ${title} và những bài học đắt giá cho cuộc sống`;
+        const tokens = wordsText.split(/\s+/).filter(Boolean);
+        let currentTime = 0;
+        wordList = tokens.map((tok: string, idx: number) => {
+          const start = Math.round(currentTime * 100) / 100;
+          const dur = Math.max(0.3, Math.min(0.7, tok.length * 0.08));
+          currentTime += dur;
+          const end = Math.round(currentTime * 100) / 100;
+          return {
+            id: `w${idx + 1}`,
+            text: tok,
+            startSec: start,
+            endSec: end,
+            confidence: 0.98,
+          };
+        });
+        totalDuration = Math.ceil(currentTime) + 1;
+      }
+
+      // Check manifest for assets
+      const manifestMap = new Map<string, any>();
+      const manifestPath = resolve(projDir, "assets/manifest.json");
+      if (existsSync(manifestPath)) {
+        try {
+          const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
+          for (const a of manifest.assets || []) {
+            manifestMap.set(a.beatId || a.id, a);
+          }
+        } catch {}
+      }
+
       const directBeats = direct?.beats || [];
       const numBeats = directBeats.length > 0 ? directBeats.length : 1;
       const wordsPerBeat = Math.ceil(wordList.length / numBeats);
@@ -252,7 +293,18 @@ function smartGenerateJson(
       const specBeats = directBeats.map((db: any, index: number) => {
         const startIdx = index * wordsPerBeat;
         const endIdx = Math.min((index + 1) * wordsPerBeat - 1, wordList.length - 1);
-        
+        const beatAsset = manifestMap.get(db.id);
+        const assets = beatAsset
+          ? [
+              {
+                assetId: beatAsset.id,
+                filePath: beatAsset.filePath,
+                kind: beatAsset.kind || "image",
+                license: beatAsset.license || "CC0",
+              },
+            ]
+          : [];
+
         return {
           id: db.id,
           range: {
@@ -262,6 +314,7 @@ function smartGenerateJson(
           layout: db.layout,
           directorNote: db.directorNote,
           visualPrompt: db.visualPrompt,
+          assets,
           captions: [
             {
               id: `cap${index + 1}`,
@@ -273,12 +326,12 @@ function smartGenerateJson(
 
       return {
         specVersion: "0.1.0",
-        projectSlug: previousResults.slug || "demo-project",
+        projectSlug: slug,
         topicId: topic,
         templateId: template,
         fps: 30,
         narration: {
-          audioPath: "audio/narration.wav",
+          audioPath,
           durationSec: totalDuration,
           words: wordList,
         },

@@ -7,6 +7,7 @@ const DEFAULT_PROPS: MainVideoProps = {
   fontsCss: undefined,
   templateConfig: undefined,
   audioSources: undefined,
+  imageSources: undefined,
 };
 
 export const RemotionRoot: React.FC = () => {

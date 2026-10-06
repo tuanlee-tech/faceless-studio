@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
@@ -195,16 +195,15 @@ describe("API Server (@faceless/server)", () => {
     });
 
     it("POST /projects/:slug/run executes deterministic stages (tts, align)", async () => {
-      // tts stage
+      // tts stage (redirects to UI Tab 1)
       const resTts = await app.request("/projects/pipeline-proj/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stage: "tts" }),
       });
-      expect(resTts.status).toBe(200);
+      expect(resTts.status).toBe(400);
       const dataTts = await resTts.json();
-      expect(dataTts.status).toBe("done");
-      expect(existsSync(resolve(TEST_BASE, "pipeline-proj", "audio", "narration.wav"))).toBe(true);
+      expect(dataTts.success).toBe(false);
 
       // align stage
       const resAlign = await app.request("/projects/pipeline-proj/run", {
@@ -464,26 +463,47 @@ describe("API Server (@faceless/server)", () => {
     });
 
     it("POST /projects/:slug/assets/generate-ai creates asset image file and manifest entry", async () => {
-      await app.request("/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: "asset-test-proj" }),
+      const prevKey = process.env.GEMINI_API_KEY;
+      process.env.GEMINI_API_KEY = "dummy-test-key";
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockImplementation((url: string, ...args: any[]) => {
+        if (typeof url === "string" && url.includes("imagen-3.0-generate-002")) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve({
+              predictions: [{ bytesBase64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" }]
+            })
+          });
+        }
+        return originalFetch(url, ...args);
       });
 
-      const res = await app.request("/projects/asset-test-proj/assets/generate-ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          beatId: "b1",
-          prompt: "Dramatic monochrome landscape",
-        }),
-      });
+      try {
+        await app.request("/projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug: "asset-test-proj" }),
+        });
 
-      expect(res.status).toBe(200);
-      const data = await res.json();
-      expect(data.success).toBe(true);
-      expect(data.beatId).toBe("b1");
-      expect(existsSync(resolve(TEST_BASE, "asset-test-proj", "assets/processed/b1.png"))).toBe(true);
+        const res = await app.request("/projects/asset-test-proj/assets/generate-ai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            beatId: "b1",
+            prompt: "Dramatic monochrome landscape",
+          }),
+        });
+
+        expect(res.status).toBe(200);
+        const data = await res.json();
+        expect(data.success).toBe(true);
+        expect(data.beatId).toBe("b1");
+        expect(existsSync(resolve(TEST_BASE, "asset-test-proj", "assets/processed/b1.png"))).toBe(true);
+      } finally {
+        globalThis.fetch = originalFetch;
+        process.env.GEMINI_API_KEY = prevKey;
+      }
     });
   });
 });

@@ -45,7 +45,7 @@ export async function probe(inputPath: string): Promise<ProbeResult> {
  */
 export async function getDuration(inputPath: string): Promise<number> {
   const result = await probe(inputPath);
-  const duration = result.format.duration;
+  const duration = parseFloat(result.format.duration as any);
   if (!duration || Number.isNaN(duration)) {
     throw new Error(`Cannot determine duration for ${inputPath}`);
   }

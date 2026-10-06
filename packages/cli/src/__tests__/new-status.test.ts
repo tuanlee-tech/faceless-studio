@@ -153,7 +153,7 @@ describe("CLI: studio new and studio status", () => {
       const state = JSON.parse(res.stdout);
       expect(state.projectSlug).toBe("proj-status-json");
       expect(Array.isArray(state.stages)).toBe(true);
-      expect(state.stages).toHaveLength(6); // outline, script, direct, spec, long-16x9, short-9x16
+      expect(state.stages).toHaveLength(7); // outline, script, tts, direct, spec, long-16x9, short-9x16
       expect(state.stages[0].stage).toBe("outline");
       expect(state.stages[0].status).toBe("pending");
       expect(state.updatedAt).toBeDefined();

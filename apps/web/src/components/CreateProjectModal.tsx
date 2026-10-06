@@ -23,7 +23,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
   // Advanced options
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [voice, setVoice] = useState("default");
+  const [voice, setVoice] = useState("Hải Đăng");
   const [speed, setSpeed] = useState(1.0);
   const [assetBudget, setAssetBudget] = useState(50);
   const [qaThreshold, setQaThreshold] = useState(70);
@@ -316,13 +316,24 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             <div className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-400 mb-1">Voice ID</label>
-                  <input
-                    type="text"
+                  <label className="block text-[11px] text-slate-400 mb-1">Giọng đọc (Voice ID)</label>
+                  <select
                     value={voice}
                     onChange={(e) => setVoice(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-200 font-mono"
-                  />
+                    className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-200"
+                  >
+                    <option value="Hải Đăng">Hải Đăng (Mặc định · Nam Bắc)</option>
+                    <option value="Thiện Minh">Thiện Minh (Kể chuyện · Nam Bắc)</option>
+                    <option value="Adam bựa">Adam bựa (Tấu hề · Nam Bắc)</option>
+                    <option value="Trúc Ly">Trúc Ly (Tự nhiên · Nữ Bắc)</option>
+                    <option value="Mai Anh">Mai Anh (Tin tức · Nữ Bắc)</option>
+                    <option value="Ngọc Huyền">Ngọc Huyền (Tự nhiên · Nữ Bắc)</option>
+                    <option value="Thùy Dung">Thùy Dung (Tin tức · Nữ Nam)</option>
+                    <option value="Thái Sơn">Thái Sơn (Kể chuyện · Nam Nam)</option>
+                    <option value="Quang Sơn">Quang Sơn (Tự nhiên · Nam Trung)</option>
+                    <option value="Kore">Kore (Gemini Cloud · Nữ)</option>
+                    <option value="Puck">Puck (Gemini Cloud · Nam)</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-[11px] text-slate-400 mb-1">Tốc độ đọc (Speed)</label>
