@@ -164,14 +164,27 @@
 
 ---
 
+## 13. Đồng bộ Trạng thái Stage Status Enum trong Thin Client Server
+
+- **Sai lầm đã mắc (Task 4.1):** 
+  - Khi thiết kế route `POST /projects/:slug/run`, server ban đầu cập nhật trạng thái stage là `"in_progress"`.
+  - Tuy nhiên, `StageStatusSchema` trong `@faceless/core` định nghĩa enum chuẩn gồm `["pending", "running", "done", "failed", "skipped"]`. Khi server gọi `pm.updateStage`, Zod ném lỗi `invalid_enum_value`.
+- **Bài học & Quy tắc:**
+  1. Kiểm tra kỹ enum definition trong schema Zod của `core` trước khi cập nhật state. Luôn dùng đúng giá trị enum chuẩn (`"running"` thay vì `"in_progress"`).
+  2. Khi validation thất bại (`ti.validateResult`), ghi nhận status `"failed"` kèm error detail, không để ứng dụng rơi vào trạng thái không xác định.
+  3. Tái sử dụng 100% Zod parsing (`ProjectConfigSchema.parse`) để tận dụng default values và kiểm tra hợp lệ ngay tại REST endpoint.
+
+---
+
 ## 12. Checklist Tự Kiểm Tra Bắt Buộc Trước Khi Báo Cáo Hoàn Thành (Pre-Flight Checklist)
 
 Mỗi khi làm xong một task, sub-agent **BẮT BUỘC** phải tự kiểm tra danh sách sau:
 
-- [ ] **1. Cô lập trách nhiệm:** Package `core` không chứa React/Remotion/native binaries; package `renderer` chỉ lo việc render; package `media` xử lý ffmpeg/audio; package `cli` chỉ điều phối lệnh.
+- [ ] **1. Cô lập trách nhiệm:** Package `core` không chứa React/Remotion/native binaries; package `renderer` chỉ lo việc render; package `media` xử lý ffmpeg/audio; package `cli` chỉ điều phối lệnh; `apps/server` đóng vai trò API thin layer tái sử dụng 100% logic cốt lõi.
 - [ ] **2. Type-check pass:** Chạy `pnpm --filter <pkg> run lint` (hoặc `tsc --noEmit`) đạt 0 lỗi.
 - [ ] **3. Build pass:** Chạy `pnpm --filter <pkg> run build` (hoặc `pnpm -r run build`) biên dịch thành công.
 - [ ] **4. Test pass 100%:** Chạy `pnpm --filter <pkg> run test` (hoặc `pnpm -r run test`) tất cả bài test đều xanh.
 - [ ] **5. Xác minh file trên đĩa:** File test, mã nguồn và tài liệu tạo ra đều tồn tại thực sự trên đĩa, không bịa tên file.
 - [ ] **6. Số liệu trung thực:** Đếm chính xác số test passed từ terminal và điền vào báo cáo nghiệm thu `docs/reports/task-X.Y-report.md`.
 - [ ] **7. Không hardcode:** Không có dummy bypass hay hardcode đường dẫn OS cục bộ.
+
