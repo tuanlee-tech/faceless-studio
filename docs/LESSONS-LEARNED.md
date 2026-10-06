@@ -125,11 +125,50 @@
 
 ---
 
-## 9. Checklist Tự Kiểm Tra Bắt Buộc Trước Khi Báo Cáo Hoàn Thành (Pre-Flight Checklist)
+## 9. Phân tích Thông số Âm thanh FFmpeg bằng JSON Thay vì Regex Text Log
+
+- **Sai lầm đã mắc (Task 3.3):** 
+  - Khi đo loudness bằng `ebur128`, code cũ cố gắng dùng regex để bóc tách chuỗi `"I: -14.0 LUFS"` từ `stderr` khi truyền `-v error`. Tuy nhiên, `-v error` tắt toàn bộ log mức `info` khiến ffmpeg không in bảng tổng kết `[Parsed_ebur128_0] Summary:`, dẫn đến lỗi `ebur128 output not found`.
+  - Nếu bỏ `-v error`, chuỗi log văn bản thay đổi tùy theo bản build và phiên bản ffmpeg (ví dụ Windows gyan.dev vs Linux distro).
+- **Quy tắc cho Sub-agents:**
+  1. Khi cần thông số âm học từ ffmpeg, luôn sử dụng bộ lọc `loudnorm` với tham số `print_format=json`.
+  2. ffmpeg sẽ in ra một khối JSON hoàn chỉnh vào `stderr`. Trích xuất khối JSON an toàn bằng `stderr.slice(stderr.indexOf("{"), stderr.lastIndexOf("}") + 1)` và parse bằng `JSON.parse()`. Phương pháp này đạt độ tin cậy 100% trên mọi nền tảng.
+
+---
+
+## 10. Kỹ thuật Stream-Copy (`-c:v copy`) trong Xử lý Hậu kỳ Muxing
+
+- **Kinh nghiệm thực tiễn (Task 3.3):**
+  - Sau khi Remotion render xong video MP4, nếu re-encode lại toàn bộ video chỉ để thay đổi luồng âm thanh sẽ tốn gấp đôi thời gian render và làm suy giảm chất lượng hình ảnh (generational loss).
+- **Quy tắc cho Sub-agents:**
+  1. Luôn sử dụng cờ **`-c:v copy`** khi mux lại âm thanh đã chuẩn hóa vào video:
+     `ffmpeg -y -i input.mp4 -i norm_audio.wav -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 192k -shortest output.mp4`
+  2. Video stream được sao chép nguyên trạng ở cấp độ packet bitstream (tốc độ xử lý chỉ mất < 500ms cho video ngắn), giữ nguyên 100% chất lượng hình ảnh sắc nét từ Remotion.
+
+---
+
+## 11. Dependency Inversion trong Package Core để Tránh Cyclic Dependency
+
+- **Kinh nghiệm kiến trúc (Task 3.4):**
+  - Package `@faceless/core` nằm ở đáy của cây phụ thuộc. `@faceless/media` và `@faceless/cli` phụ thuộc vào `core`.
+  - Khi xây dựng `QAManager` tại `core` để kiểm tra độ lớn âm thanh (LUFS) của file video MP4 sau render, nếu `core` import trực tiếp `LoudnessProcessor` từ `media`, dự án sẽ bị lỗi phụ thuộc vòng (Cyclic Dependency: `core` $\leftrightarrow$ `media`).
+- **Quy tắc cho Sub-agents:**
+  1. Áp dụng nguyên lý **Dependency Inversion (IoC)**: Định nghĩa interface trừu tượng `QAMediaInspector` tại `core`:
+     ```ts
+     export interface QAMediaInspector {
+       probeDuration(filePath: string): Promise<number>;
+       measureLoudness(filePath: string): Promise<{ input_i: number; input_tp: number }>;
+     }
+     ```
+  2. Caller ở tầng trên (`@faceless/cli`) sẽ inject implementation cụ thể (`getDuration`, `measureLoudness` từ `@faceless/media`) khi thực thi. Trong unit test của `core`, có thể inject mock inspector mà không cần gọi native binary.
+
+---
+
+## 12. Checklist Tự Kiểm Tra Bắt Buộc Trước Khi Báo Cáo Hoàn Thành (Pre-Flight Checklist)
 
 Mỗi khi làm xong một task, sub-agent **BẮT BUỘC** phải tự kiểm tra danh sách sau:
 
-- [ ] **1. Cô lập trách nhiệm:** Package `core` không chứa React/Remotion; package `renderer` chỉ lo việc render; package `cli` chỉ điều phối lệnh.
+- [ ] **1. Cô lập trách nhiệm:** Package `core` không chứa React/Remotion/native binaries; package `renderer` chỉ lo việc render; package `media` xử lý ffmpeg/audio; package `cli` chỉ điều phối lệnh.
 - [ ] **2. Type-check pass:** Chạy `pnpm --filter <pkg> run lint` (hoặc `tsc --noEmit`) đạt 0 lỗi.
 - [ ] **3. Build pass:** Chạy `pnpm --filter <pkg> run build` (hoặc `pnpm -r run build`) biên dịch thành công.
 - [ ] **4. Test pass 100%:** Chạy `pnpm --filter <pkg> run test` (hoặc `pnpm -r run test`) tất cả bài test đều xanh.

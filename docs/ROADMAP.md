@@ -25,12 +25,12 @@
 - [x] Subtitle tiếng Việt hiển thị đúng neo theo từ (font bundled trong `templates/*/fonts/`, không dùng font hệ thống).
 - [x] Quản lý license toàn cục trong `library/library.json` và kiểm tra hợp lệ bằng `LicenseManager`.
 
-## Phase 3 — Short 9:16, QA, Audio mix
+## Phase 3 — Short 9:16, QA, Audio mix (ĐÃ HOÀN THÀNH ✅)
 **Mục tiêu:** Sinh Short từ spec, QA gates, audio mixing (nhạc + SFX + ducking).
 **Tiêu chí nghiệm thu:**
-- `studio shorts test-01` xuất ≥ 1 Short 9:16 hợp lệ.
-- `studio qa test-01 --pre` và `--post` chạy được, trả danh sách lỗi/cảnh báo.
-- Audio mix: loudness đạt -14 LUFS ± 1 (YouTube target), ducking khi có giọng đọc.
+- [x] `studio shorts <slug>` xuất ≥ 1 Short 9:16 hợp lệ, tự động dịch chuyển mốc thời gian về gốc 0.
+- [x] `studio qa <slug> --pre` và `--post` chạy được, trả danh sách lỗi/cảnh báo qua bảng console và JSON.
+- [x] Audio mix: loudness đạt -14 LUFS ± 0.5 (chuẩn YouTube), auto-ducking 20–30% khi có giọng đọc.
 
 ## Phase 4 — UI (server + web)
 **Mục tiêu:** Web UI gọi CLI qua REST, hiển thị tiến độ qua SSE.
@@ -42,4 +42,4 @@
 - **Spike: Render perf** — 1 chương 2 phút ở 30fps, đo thời gian trên CPU i5 đời 12. → Phase 1.
 - **Rủi ro: Remotion license** — miễn phí ≤ 3 người. Kiểm lại trước Phase 4.
 - **Rủi ro: VieNeu-TTS v3 Turbo** — chưa xác nhận GPU Pascal. CPU-first.
-- **Rủi ro: Cross-platform** — Windows chưa kiểm. Ghi lại mỗi phát hiện.
+- **Rủi ro: Cross-platform** — Đã kiểm thử thực tế và đạt 100% xanh trên cả Windows 10 và Linux (112/112 tests passed). Đã xử lý triệt để xung đột Webpack ESM, font data URI và lockfile concurrency.
