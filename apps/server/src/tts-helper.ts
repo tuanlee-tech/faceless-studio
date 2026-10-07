@@ -30,27 +30,39 @@ export function splitTextIntoChunks(text: string, maxWords: number = 22): string
   }
 
   const chunks: string[] = [];
-  for (const sentence of rawSentences) {
-    const words = sentence.split(/\s+/).filter(Boolean);
-    if (words.length <= maxWords) {
-      chunks.push(sentence);
-    } else {
-      // Split sentence into smaller sub-clauses at punctuation boundaries: , ; : -
-      const subClauses = sentence.split(/(?<=[,;:—–-])\s+/).map((c) => c.trim()).filter(Boolean);
-      let currentChunk = "";
+  let currentGroup = "";
 
-      for (const clause of subClauses) {
-        const testChunk = currentChunk ? `${currentChunk} ${clause}` : clause;
-        if (testChunk.split(/\s+/).filter(Boolean).length <= maxWords) {
-          currentChunk = testChunk;
-        } else {
-          if (currentChunk) chunks.push(currentChunk);
-          currentChunk = clause;
+  for (const sentence of rawSentences) {
+    const testGroup = currentGroup ? `${currentGroup} ${sentence}` : sentence;
+    const wordCount = testGroup.split(/\s+/).filter(Boolean).length;
+
+    if (wordCount <= maxWords) {
+      currentGroup = testGroup;
+    } else {
+      if (currentGroup) chunks.push(currentGroup);
+      
+      // If a single sentence is still larger than maxWords, split it by commas
+      const sentenceWords = sentence.split(/\s+/).filter(Boolean).length;
+      if (sentenceWords > maxWords) {
+        const subClauses = sentence.split(/(?<=[,;:—–-])\s+/).map((c) => c.trim()).filter(Boolean);
+        let subGroup = "";
+        for (const clause of subClauses) {
+          const testSub = subGroup ? `${subGroup} ${clause}` : clause;
+          if (testSub.split(/\s+/).filter(Boolean).length <= maxWords) {
+            subGroup = testSub;
+          } else {
+            if (subGroup) chunks.push(subGroup);
+            subGroup = clause;
+          }
         }
+        currentGroup = subGroup;
+      } else {
+        currentGroup = sentence;
       }
-      if (currentChunk) chunks.push(currentChunk);
     }
   }
+  
+  if (currentGroup) chunks.push(currentGroup);
 
   return chunks.filter((c) => Boolean(c.trim()));
 }
@@ -88,7 +100,7 @@ async function generateGeminiFlashTTS(
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
 
   const ai = new GoogleGenAI({ apiKey });
-  const chunks = splitTextIntoChunks(text, 35);
+  const chunks = splitTextIntoChunks(text, 300);
   if (chunks.length === 0) chunks.push(text);
 
   console.log(`[Gemini-TTS] Generating TTS with ${chunks.length} chunks for voice "${voiceId}"...`);
@@ -126,27 +138,48 @@ async function generateGeminiFlashTTS(
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      const res = await ai.models.generateContent({
-        model: "gemini-3.8-flash-tts",
-        contents: chunk,
-        config: {
-          responseModalities: ["AUDIO"],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: {
-                voiceName: voiceId,
+      let res;
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          res = await ai.models.generateContent({
+            model: "gemini-3.8-flash-tts",
+            contents: chunk,
+            config: {
+              responseModalities: ["AUDIO"],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: {
+                    voiceName: voiceId,
+                  },
+                },
               },
             },
-          },
-        },
-      });
+          });
+          break; // Success!
+        } catch (err: any) {
+          const msg = err.message || "";
+          if ((msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED") || msg.includes("quota")) && retries > 1) {
+            console.warn(`[Gemini-TTS] Rate limit hit on chunk ${i + 1}. Waiting 5 seconds before retrying...`);
+            await new Promise((r) => setTimeout(r, 5000));
+            retries--;
+          } else {
+            throw err; // Out of retries or other error
+          }
+        }
+      }
 
-      const base64Audio = res.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      const base64Audio = res?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (!base64Audio) throw new Error(`Gemini TTS returned no audio for chunk ${i + 1}`);
 
       const partPath = resolve(dir, `temp_gemini_part_${i}.mp3`);
       writeFileSync(partPath, Buffer.from(base64Audio, "base64"));
       tempFiles.push(partPath);
+      
+      // Delay slightly between valid chunks to avoid hitting 15 RPM burst limit
+      if (i < chunks.length - 1) {
+        await new Promise((r) => setTimeout(r, 2000));
+      }
     }
 
     const listFile = resolve(dir, "temp_concat_list.txt");
@@ -162,7 +195,6 @@ async function generateGeminiFlashTTS(
     return { durationSec: Math.max(1, wordCount / (130 / 60)), chunksCount: chunks.length };
   }
 }
-
 /**
  * Downloads audio from Google Translate TTS (used as Gemini/Google API fallback).
  */
@@ -313,7 +345,7 @@ export async function generateTTS(
 
   if (useGemini) {
     const geminiVoice = isGeminiVoice ? voiceId : "Kore";
-    console.log(`Using Gemini 3.8 Flash TTS via API Key with voice: ${geminiVoice}...`);
+    console.log(`Using Gemini 3.8 Flash TTS via API Key: ${apiKey ? apiKey.substring(0, 10) : "NO-KEY"}... with voice: ${geminiVoice}...`);
     try {
       primaryAudioPath = outputPath.replace(/\.wav$/i, ".mp3");
       result = await generateGeminiFlashTTS(text, primaryAudioPath, geminiVoice);
@@ -323,6 +355,7 @@ export async function generateTTS(
       const errMsg = err.message || "";
       if (errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("429") || errMsg.includes("quota")) {
         geminiQuotaExceeded = true;
+        console.warn(`[TTS] Gemini TTS 429 Error Details: ${errMsg}`);
         console.warn(`[TTS] Gemini TTS đã hết hạn mức (429 Quota Exceeded). Tự động chuyển hướng sang VieNeu-TTS Local...`);
       } else {
         console.warn(`[TTS] Gemini TTS failed: ${errMsg}. Tự động fallback sang VieNeu-TTS...`);

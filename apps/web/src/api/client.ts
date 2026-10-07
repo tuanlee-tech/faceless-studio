@@ -172,16 +172,17 @@ export const api = {
     });
   },
 
-  async generateAiAsset(slug: string, beatId?: string, prompt?: string): Promise<{ success: boolean; beatId: string; imagePath: string; source: string; manifest: any }> {
+  async generateAiAsset(slug: string, beatId?: string, prompt?: string, model?: string): Promise<{ success: boolean; beatId: string; imagePath: string; source: string; manifest: any }> {
     return request(`/projects/${slug}/assets/generate-ai`, {
       method: "POST",
-      body: JSON.stringify({ beatId, prompt }),
+      body: JSON.stringify({ beatId, prompt, model }),
     });
   },
 
-  async generateAllAiAssets(slug: string): Promise<{ success: boolean; generatedCount: number; totalBeats: number; manifest: any; results: any[] }> {
+  async generateAllAiAssets(slug: string, model?: string): Promise<{ success: boolean; generatedCount: number; totalBeats: number; manifest: any; results: any[] }> {
     return request(`/projects/${slug}/assets/generate-ai-all`, {
       method: "POST",
+      body: JSON.stringify({ model }),
     });
   },
 

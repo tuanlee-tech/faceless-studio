@@ -1,0 +1,1280 @@
+{
+  "audioPath": "audio/narration.mp3",
+  "durationSec": 84,
+  "words": [
+    {
+      "id": "w1",
+      "text": "Tháng",
+      "startSec": 0,
+      "endSec": 0.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w2",
+      "text": "3",
+      "startSec": 0.46,
+      "endSec": 0.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w3",
+      "text": "năm",
+      "startSec": 0.92,
+      "endSec": 1.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w4",
+      "text": "1974,",
+      "startSec": 1.38,
+      "endSec": 1.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w5",
+      "text": "tại",
+      "startSec": 1.85,
+      "endSec": 2.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w6",
+      "text": "vùng",
+      "startSec": 2.31,
+      "endSec": 2.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w7",
+      "text": "đất",
+      "startSec": 2.77,
+      "endSec": 3.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w8",
+      "text": "khô",
+      "startSec": 3.23,
+      "endSec": 3.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w9",
+      "text": "cằn",
+      "startSec": 3.69,
+      "endSec": 4.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w10",
+      "text": "Thiểm",
+      "startSec": 4.15,
+      "endSec": 4.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w11",
+      "text": "Tây,",
+      "startSec": 4.62,
+      "endSec": 5.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w12",
+      "text": "một",
+      "startSec": 5.08,
+      "endSec": 5.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w13",
+      "text": "tiếng",
+      "startSec": 5.54,
+      "endSec": 6,
+      "confidence": 0.99
+    },
+    {
+      "id": "w14",
+      "text": "cuốc",
+      "startSec": 6,
+      "endSec": 6.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w15",
+      "text": "bổ",
+      "startSec": 6.46,
+      "endSec": 6.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w16",
+      "text": "xuống",
+      "startSec": 6.92,
+      "endSec": 7.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w17",
+      "text": "đã",
+      "startSec": 7.38,
+      "endSec": 7.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w18",
+      "text": "đập",
+      "startSec": 7.85,
+      "endSec": 8.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w19",
+      "text": "vỡ",
+      "startSec": 8.31,
+      "endSec": 8.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w20",
+      "text": "sự",
+      "startSec": 8.77,
+      "endSec": 9.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w21",
+      "text": "tĩnh",
+      "startSec": 9.23,
+      "endSec": 9.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w22",
+      "text": "lặng",
+      "startSec": 9.69,
+      "endSec": 10.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w23",
+      "text": "của",
+      "startSec": 10.15,
+      "endSec": 10.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w24",
+      "text": "hơn",
+      "startSec": 10.62,
+      "endSec": 11.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w25",
+      "text": "hai",
+      "startSec": 11.08,
+      "endSec": 11.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w26",
+      "text": "thiên",
+      "startSec": 11.54,
+      "endSec": 12,
+      "confidence": 0.99
+    },
+    {
+      "id": "w27",
+      "text": "niên",
+      "startSec": 12,
+      "endSec": 12.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w28",
+      "text": "kỷ.",
+      "startSec": 12.46,
+      "endSec": 12.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w29",
+      "text": "Người",
+      "startSec": 12.92,
+      "endSec": 13.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w30",
+      "text": "nông",
+      "startSec": 13.38,
+      "endSec": 13.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w31",
+      "text": "dân",
+      "startSec": 13.85,
+      "endSec": 14.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w32",
+      "text": "đào",
+      "startSec": 14.31,
+      "endSec": 14.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w33",
+      "text": "giếng",
+      "startSec": 14.77,
+      "endSec": 15.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w34",
+      "text": "nào",
+      "startSec": 15.23,
+      "endSec": 15.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w35",
+      "text": "ngờ",
+      "startSec": 15.69,
+      "endSec": 16.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w36",
+      "text": "rằng,",
+      "startSec": 16.15,
+      "endSec": 16.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w37",
+      "text": "dưới",
+      "startSec": 16.62,
+      "endSec": 17.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w38",
+      "text": "lớp",
+      "startSec": 17.08,
+      "endSec": 17.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w39",
+      "text": "đất",
+      "startSec": 17.54,
+      "endSec": 18,
+      "confidence": 0.99
+    },
+    {
+      "id": "w40",
+      "text": "đỏ",
+      "startSec": 18,
+      "endSec": 18.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w41",
+      "text": "ấy",
+      "startSec": 18.46,
+      "endSec": 18.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w42",
+      "text": "không",
+      "startSec": 18.92,
+      "endSec": 19.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w43",
+      "text": "phải",
+      "startSec": 19.38,
+      "endSec": 19.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w44",
+      "text": "là",
+      "startSec": 19.85,
+      "endSec": 20.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w45",
+      "text": "mạch",
+      "startSec": 20.31,
+      "endSec": 20.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w46",
+      "text": "nước",
+      "startSec": 20.77,
+      "endSec": 21.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w47",
+      "text": "nguồn,",
+      "startSec": 21.23,
+      "endSec": 21.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w48",
+      "text": "mà",
+      "startSec": 21.69,
+      "endSec": 22.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w49",
+      "text": "là",
+      "startSec": 22.15,
+      "endSec": 22.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w50",
+      "text": "hơi",
+      "startSec": 22.62,
+      "endSec": 23.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w51",
+      "text": "thở",
+      "startSec": 23.08,
+      "endSec": 23.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w52",
+      "text": "của",
+      "startSec": 23.54,
+      "endSec": 24,
+      "confidence": 0.99
+    },
+    {
+      "id": "w53",
+      "text": "một",
+      "startSec": 24,
+      "endSec": 24.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w54",
+      "text": "đế",
+      "startSec": 24.46,
+      "endSec": 24.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w55",
+      "text": "chế",
+      "startSec": 24.92,
+      "endSec": 25.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w56",
+      "text": "ngủ",
+      "startSec": 25.38,
+      "endSec": 25.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w57",
+      "text": "quên.",
+      "startSec": 25.85,
+      "endSec": 26.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w58",
+      "text": "Hơn",
+      "startSec": 26.31,
+      "endSec": 26.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w59",
+      "text": "tám",
+      "startSec": 26.77,
+      "endSec": 27.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w60",
+      "text": "nghìn",
+      "startSec": 27.23,
+      "endSec": 27.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w61",
+      "text": "chiến",
+      "startSec": 27.69,
+      "endSec": 28.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w62",
+      "text": "binh",
+      "startSec": 28.15,
+      "endSec": 28.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w63",
+      "text": "đất",
+      "startSec": 28.62,
+      "endSec": 29.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w64",
+      "text": "nung",
+      "startSec": 29.08,
+      "endSec": 29.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w65",
+      "text": "hiện",
+      "startSec": 29.54,
+      "endSec": 30,
+      "confidence": 0.99
+    },
+    {
+      "id": "w66",
+      "text": "diện",
+      "startSec": 30,
+      "endSec": 30.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w67",
+      "text": "trong",
+      "startSec": 30.46,
+      "endSec": 30.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w68",
+      "text": "bóng",
+      "startSec": 30.92,
+      "endSec": 31.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w69",
+      "text": "tối,",
+      "startSec": 31.38,
+      "endSec": 31.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w70",
+      "text": "sừng",
+      "startSec": 31.85,
+      "endSec": 32.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w71",
+      "text": "sững",
+      "startSec": 32.31,
+      "endSec": 32.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w72",
+      "text": "như",
+      "startSec": 32.77,
+      "endSec": 33.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w73",
+      "text": "một",
+      "startSec": 33.23,
+      "endSec": 33.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w74",
+      "text": "lời",
+      "startSec": 33.69,
+      "endSec": 34.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w75",
+      "text": "thề",
+      "startSec": 34.15,
+      "endSec": 34.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w76",
+      "text": "vượt",
+      "startSec": 34.62,
+      "endSec": 35.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w77",
+      "text": "thời",
+      "startSec": 35.08,
+      "endSec": 35.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w78",
+      "text": "gian.",
+      "startSec": 35.54,
+      "endSec": 36,
+      "confidence": 0.99
+    },
+    {
+      "id": "w79",
+      "text": "Không",
+      "startSec": 36,
+      "endSec": 36.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w80",
+      "text": "một",
+      "startSec": 36.46,
+      "endSec": 36.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w81",
+      "text": "khuôn",
+      "startSec": 36.92,
+      "endSec": 37.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w82",
+      "text": "mặt",
+      "startSec": 37.38,
+      "endSec": 37.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w83",
+      "text": "nào",
+      "startSec": 37.85,
+      "endSec": 38.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w84",
+      "text": "trùng",
+      "startSec": 38.31,
+      "endSec": 38.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w85",
+      "text": "lặp,",
+      "startSec": 38.77,
+      "endSec": 39.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w86",
+      "text": "mỗi",
+      "startSec": 39.23,
+      "endSec": 39.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w87",
+      "text": "bức",
+      "startSec": 39.69,
+      "endSec": 40.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w88",
+      "text": "tượng",
+      "startSec": 40.15,
+      "endSec": 40.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w89",
+      "text": "mang",
+      "startSec": 40.62,
+      "endSec": 41.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w90",
+      "text": "một",
+      "startSec": 41.08,
+      "endSec": 41.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w91",
+      "text": "sinh",
+      "startSec": 41.54,
+      "endSec": 42,
+      "confidence": 0.99
+    },
+    {
+      "id": "w92",
+      "text": "khí,",
+      "startSec": 42,
+      "endSec": 42.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w93",
+      "text": "một",
+      "startSec": 42.46,
+      "endSec": 42.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w94",
+      "text": "biểu",
+      "startSec": 42.92,
+      "endSec": 43.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w95",
+      "text": "cảm",
+      "startSec": 43.38,
+      "endSec": 43.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w96",
+      "text": "riêng",
+      "startSec": 43.85,
+      "endSec": 44.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w97",
+      "text": "biệt,",
+      "startSec": 44.31,
+      "endSec": 44.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w98",
+      "text": "như",
+      "startSec": 44.77,
+      "endSec": 45.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w99",
+      "text": "những",
+      "startSec": 45.23,
+      "endSec": 45.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w100",
+      "text": "con",
+      "startSec": 45.69,
+      "endSec": 46.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w101",
+      "text": "người",
+      "startSec": 46.15,
+      "endSec": 46.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w102",
+      "text": "thực",
+      "startSec": 46.62,
+      "endSec": 47.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w103",
+      "text": "sự",
+      "startSec": 47.08,
+      "endSec": 47.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w104",
+      "text": "bị",
+      "startSec": 47.54,
+      "endSec": 48,
+      "confidence": 0.99
+    },
+    {
+      "id": "w105",
+      "text": "hóa",
+      "startSec": 48,
+      "endSec": 48.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w106",
+      "text": "đá",
+      "startSec": 48.46,
+      "endSec": 48.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w107",
+      "text": "trước",
+      "startSec": 48.92,
+      "endSec": 49.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w108",
+      "text": "giờ",
+      "startSec": 49.38,
+      "endSec": 49.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w109",
+      "text": "xung",
+      "startSec": 49.85,
+      "endSec": 50.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w110",
+      "text": "trận.",
+      "startSec": 50.31,
+      "endSec": 50.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w111",
+      "text": "Tất",
+      "startSec": 50.77,
+      "endSec": 51.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w112",
+      "text": "cả",
+      "startSec": 51.23,
+      "endSec": 51.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w113",
+      "text": "đều",
+      "startSec": 51.69,
+      "endSec": 52.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w114",
+      "text": "đồng",
+      "startSec": 52.15,
+      "endSec": 52.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w115",
+      "text": "loạt",
+      "startSec": 52.62,
+      "endSec": 53.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w116",
+      "text": "hướng",
+      "startSec": 53.08,
+      "endSec": 53.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w117",
+      "text": "về",
+      "startSec": 53.54,
+      "endSec": 54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w118",
+      "text": "phía",
+      "startSec": 54,
+      "endSec": 54.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w119",
+      "text": "Đông,",
+      "startSec": 54.46,
+      "endSec": 54.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w120",
+      "text": "ánh",
+      "startSec": 54.92,
+      "endSec": 55.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w121",
+      "text": "mắt",
+      "startSec": 55.38,
+      "endSec": 55.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w122",
+      "text": "sắc",
+      "startSec": 55.85,
+      "endSec": 56.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w123",
+      "text": "lạnh",
+      "startSec": 56.31,
+      "endSec": 56.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w124",
+      "text": "dõi",
+      "startSec": 56.77,
+      "endSec": 57.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w125",
+      "text": "theo",
+      "startSec": 57.23,
+      "endSec": 57.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w126",
+      "text": "bóng",
+      "startSec": 57.69,
+      "endSec": 58.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w127",
+      "text": "tối",
+      "startSec": 58.15,
+      "endSec": 58.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w128",
+      "text": "vĩnh",
+      "startSec": 58.62,
+      "endSec": 59.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w129",
+      "text": "hằng",
+      "startSec": 59.08,
+      "endSec": 59.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w130",
+      "text": "để",
+      "startSec": 59.54,
+      "endSec": 60,
+      "confidence": 0.99
+    },
+    {
+      "id": "w131",
+      "text": "bảo",
+      "startSec": 60,
+      "endSec": 60.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w132",
+      "text": "vệ",
+      "startSec": 60.46,
+      "endSec": 60.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w133",
+      "text": "lăng",
+      "startSec": 60.92,
+      "endSec": 61.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w134",
+      "text": "mộ",
+      "startSec": 61.38,
+      "endSec": 61.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w135",
+      "text": "của",
+      "startSec": 61.85,
+      "endSec": 62.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w136",
+      "text": "Tần",
+      "startSec": 62.31,
+      "endSec": 62.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w137",
+      "text": "Thủy",
+      "startSec": 62.77,
+      "endSec": 63.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w138",
+      "text": "Hoàng",
+      "startSec": 63.23,
+      "endSec": 63.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w139",
+      "text": "-",
+      "startSec": 63.69,
+      "endSec": 64.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w140",
+      "text": "vị",
+      "startSec": 64.15,
+      "endSec": 64.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w141",
+      "text": "hoàng",
+      "startSec": 64.62,
+      "endSec": 65.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w142",
+      "text": "đế",
+      "startSec": 65.08,
+      "endSec": 65.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w143",
+      "text": "từng",
+      "startSec": 65.54,
+      "endSec": 66,
+      "confidence": 0.99
+    },
+    {
+      "id": "w144",
+      "text": "mộng",
+      "startSec": 66,
+      "endSec": 66.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w145",
+      "text": "tưởng",
+      "startSec": 66.46,
+      "endSec": 66.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w146",
+      "text": "cai",
+      "startSec": 66.92,
+      "endSec": 67.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w147",
+      "text": "trị",
+      "startSec": 67.38,
+      "endSec": 67.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w148",
+      "text": "cả",
+      "startSec": 67.85,
+      "endSec": 68.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w149",
+      "text": "cõi",
+      "startSec": 68.31,
+      "endSec": 68.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w150",
+      "text": "vĩnh",
+      "startSec": 68.77,
+      "endSec": 69.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w151",
+      "text": "sinh.",
+      "startSec": 69.23,
+      "endSec": 69.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w152",
+      "text": "Dưới",
+      "startSec": 69.69,
+      "endSec": 70.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w153",
+      "text": "lớp",
+      "startSec": 70.15,
+      "endSec": 70.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w154",
+      "text": "đất",
+      "startSec": 70.62,
+      "endSec": 71.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w155",
+      "text": "dày,",
+      "startSec": 71.08,
+      "endSec": 71.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w156",
+      "text": "dòng",
+      "startSec": 71.54,
+      "endSec": 72,
+      "confidence": 0.99
+    },
+    {
+      "id": "w157",
+      "text": "sông",
+      "startSec": 72,
+      "endSec": 72.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w158",
+      "text": "thủy",
+      "startSec": 72.46,
+      "endSec": 72.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w159",
+      "text": "ngân",
+      "startSec": 72.92,
+      "endSec": 73.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w160",
+      "text": "vẫn",
+      "startSec": 73.38,
+      "endSec": 73.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w161",
+      "text": "âm",
+      "startSec": 73.85,
+      "endSec": 74.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w162",
+      "text": "thầm",
+      "startSec": 74.31,
+      "endSec": 74.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w163",
+      "text": "chảy",
+      "startSec": 74.77,
+      "endSec": 75.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w164",
+      "text": "trong",
+      "startSec": 75.23,
+      "endSec": 75.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w165",
+      "text": "truyền",
+      "startSec": 75.69,
+      "endSec": 76.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w166",
+      "text": "thuyết,",
+      "startSec": 76.15,
+      "endSec": 76.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w167",
+      "text": "bao",
+      "startSec": 76.62,
+      "endSec": 77.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w168",
+      "text": "bọc",
+      "startSec": 77.08,
+      "endSec": 77.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w169",
+      "text": "lấy",
+      "startSec": 77.54,
+      "endSec": 78,
+      "confidence": 0.99
+    },
+    {
+      "id": "w170",
+      "text": "bí",
+      "startSec": 78,
+      "endSec": 78.46,
+      "confidence": 0.99
+    },
+    {
+      "id": "w171",
+      "text": "mật",
+      "startSec": 78.46,
+      "endSec": 78.92,
+      "confidence": 0.99
+    },
+    {
+      "id": "w172",
+      "text": "lớn",
+      "startSec": 78.92,
+      "endSec": 79.38,
+      "confidence": 0.99
+    },
+    {
+      "id": "w173",
+      "text": "nhất",
+      "startSec": 79.38,
+      "endSec": 79.85,
+      "confidence": 0.99
+    },
+    {
+      "id": "w174",
+      "text": "lịch",
+      "startSec": 79.85,
+      "endSec": 80.31,
+      "confidence": 0.99
+    },
+    {
+      "id": "w175",
+      "text": "sử",
+      "startSec": 80.31,
+      "endSec": 80.77,
+      "confidence": 0.99
+    },
+    {
+      "id": "w176",
+      "text": "Trung",
+      "startSec": 80.77,
+      "endSec": 81.23,
+      "confidence": 0.99
+    },
+    {
+      "id": "w177",
+      "text": "Hoa",
+      "startSec": 81.23,
+      "endSec": 81.69,
+      "confidence": 0.99
+    },
+    {
+      "id": "w178",
+      "text": "chưa",
+      "startSec": 81.69,
+      "endSec": 82.15,
+      "confidence": 0.99
+    },
+    {
+      "id": "w179",
+      "text": "từng",
+      "startSec": 82.15,
+      "endSec": 82.62,
+      "confidence": 0.99
+    },
+    {
+      "id": "w180",
+      "text": "được",
+      "startSec": 82.62,
+      "endSec": 83.08,
+      "confidence": 0.99
+    },
+    {
+      "id": "w181",
+      "text": "mở",
+      "startSec": 83.08,
+      "endSec": 83.54,
+      "confidence": 0.99
+    },
+    {
+      "id": "w182",
+      "text": "ra.",
+      "startSec": 83.54,
+      "endSec": 84,
+      "confidence": 0.99
+    }
+  ]
+}

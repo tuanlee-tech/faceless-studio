@@ -35,6 +35,7 @@ export const StoryboardAssetView: React.FC<StoryboardAssetViewProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isGeneratingAiAll, setIsGeneratingAiAll] = useState(false);
+  const [aiModel, setAiModel] = useState("gemini-3.1-flash-image");
   const [generatingBeatId, setGeneratingBeatId] = useState<string | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -157,7 +158,7 @@ export const StoryboardAssetView: React.FC<StoryboardAssetViewProps> = ({
         beat?.directorNote ||
         `Visual illustration for beat ${beatId}`;
 
-      const res = await api.generateAiAsset(slug, beatId, promptToUse);
+      const res = await api.generateAiAsset(slug, beatId, promptToUse, aiModel);
       if (res.success) {
         onNotify(
           "success",
@@ -337,6 +338,17 @@ export const StoryboardAssetView: React.FC<StoryboardAssetViewProps> = ({
             <RefreshCw className="w-4 h-4" />
           </button>
 
+          {/* AI Model Selector */}
+          <select 
+            value={aiModel}
+            onChange={(e) => setAiModel(e.target.value)}
+            className="px-3 py-2 bg-slate-800 border border-slate-700 text-white rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500"
+          >
+            <option value="gemini-3.1-flash-image">Nano Banana 2 (3.1 Flash Image)</option>
+            <option value="gemini-3.1-flash-lite-image">Nano Banana Lite (3.1 Flash Lite Image)</option>
+            <option value="gemini-3.5-pro-image-preview">Nano Banana Pro (3.5 Pro Image Preview)</option>
+            <option value="gemini-3-pro-image">Nano Banana Pro (3.0 Pro Image)</option>
+          </select>
           {/* AI Generator Batch Button */}
           <button
             onClick={handleGenerateAllAiAssets}

@@ -515,3 +515,30 @@ Mỗi khi làm xong một task, sub-agent **BẮT BUỘC** phải tự kiểm tr
        - Ngắt vế tại dấu phẩy `,` nếu cụm từ đã tích lũy từ 4 từ trở lên.
        - Giới hạn tối đa 6-7 từ mỗi dòng, ngăn chặn triệt để hiện tượng tràn thành 2 dòng bằng `flexWrap: "nowrap"`.
        - Giữ hiển thị phụ đề mượt mà cho đến khi câu tiếp theo bắt đầu, tránh hiện tượng chữ biến mất giật cục trong các khoảng dừng thở ngắn.
+
+---
+
+## 32. Lỗi Quota Exceeded (429) ảo do Rate Limit của Gemini API
+- **Sai lầm đã mắc:** 
+  - Trong logic sinh âm thanh TTS bằng Gemini (`generateGeminiFlashTTS`), văn bản được chặt nhỏ (35 từ/chunk) và gửi liên tiếp qua API bằng vòng lặp `for` không có thời gian nghỉ.
+  - Khi văn bản dài, vòng lặp đẩy hàng loạt request lên API cùng một lúc, gây ra lỗi **429 (Resource Exhausted)** do vi phạm giới hạn **Rate Limit (15 RPM - Requests Per Minute)** của Gemini Free Tier.
+  - Thông báo lỗi bị hardcode là "đã hết quota trong ngày", gây hiểu lầm cho người dùng (họ kiểm tra trên AI Studio thì vẫn tạo được vì AI Studio không chunking và gửi liên tục như vậy).
+- **Bài học & Quy tắc giải quyết:**
+  1. **Hiểu đúng lỗi 429:** 429 có thể do hết quota theo ngày (Quota Exceeded) hoặc gửi quá nhanh (Rate Limit Exceeded). Phải thông báo chính xác cho người dùng.
+  2. **Tránh Burst Requests:** Chèn thêm thời gian nghỉ giữa các request (ví dụ `await new Promise((r) => setTimeout(r, 2000))`) khi phải chunk dữ liệu gửi qua API, để tránh kích hoạt cơ chế chống spam/rate limit.
+  3. **Thêm cơ chế Retry (Backoff):** Bọc block API call bằng cấu trúc `try...catch` có retry. Nếu bắt được lỗi 429 do rate limit, tự động chờ 5 giây rồi thử lại thay vì ném lỗi hoặc fallback ngay lập tức.
+
+---
+
+## 33. Deprecation của Model Tạo Ảnh Imagen 3 và Cấu Hình Quota Nano Banana (Gemini Image Models)
+
+- **Sai lầm đã mắc:**
+  - Backend sử dụng URL bị hardcode tới model `imagen-3.0-generate-002:predict`. Model này đã bị Google khai tử (shut down) hoàn toàn từ tháng 11/2025, dẫn đến việc API trả về lỗi **404 Not Found**.
+  - Giao diện UI thiếu bộ chọn model tạo ảnh AI, khiến người dùng không thể chuyển sang sử dụng các dòng model thế hệ mới Nano Banana (`gemini-3.1-flash-image`, `gemini-3.1-flash-lite-image`, `gemini-3.5-pro-image-preview`).
+- **Bài học & Quy tắc giải quyết:**
+  1. **Nâng cấp sang SDK `@google/genai` mới:**
+     - Sử dụng phương thức `ai.models.generateContent` với `responseModalities: ["IMAGE"]` kết hợp với tên model mới (`gemini-3.1-flash-image` / Nano Banana 2).
+  2. **Thêm tuỳ chọn Model trên UI:**
+     - Bổ sung `<select>` dropdown cho phép người dùng tự lựa chọn giữa các phiên bản Nano Banana (Pro, Lite, Flash Image) tùy thuộc vào nhu cầu và tài khoản của họ.
+  3. **Lưu ý về Quota API:**
+     - Các tài khoản Google Cloud Free Tier không được cấp quota tạo ảnh AI (`limit: 0`). Người dùng bắt buộc phải bật Billing (Pay-as-you-go) trên dự án Google Cloud để mở khóa khả năng tạo ảnh bằng Gemini API, cho dù họ đang dùng tài khoản cá nhân gói Google One AI Premium.

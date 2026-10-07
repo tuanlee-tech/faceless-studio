@@ -199,7 +199,7 @@ export const TTSGenerator: React.FC<TTSGeneratorProps> = ({ slug, onRefreshProje
             active: true,
             originalVoice: targetVoice,
             fallbackVoice: data.fallbackVoice || "Hải Đăng",
-            reason: "Google Gemini TTS đã vượt quá hạn mức sử dụng (429 Quota Exceeded: tối đa 10 lượt/ngày).",
+            reason: data.warning || "Google Gemini TTS đã vượt quá hạn mức sử dụng (429 Quota Exceeded: tối đa 10 lượt/ngày).",
             details: "Hệ thống đã tự động chuyển sang giọng VieNeu Local (" + (data.fallbackVoice || "Hải Đăng") + "), đồng thời loại bỏ các tag <sigh>, <laugh>... để VieNeu không đọc thành 'dấu nhỏ hơn, dấu bé hơn'."
           });
           onNotify("success", `⚠️ ${data.warning || "Đã tự động chuyển sang VieNeu Local do Gemini hết quota!"}`);
@@ -316,7 +316,7 @@ export const TTSGenerator: React.FC<TTSGeneratorProps> = ({ slug, onRefreshProje
             active: true,
             originalVoice: voiceId,
             fallbackVoice: data.fallbackVoice || "Hải Đăng",
-            reason: "Google Gemini TTS đã vượt quá hạn mức miễn phí (429 Quota Exceeded: tối đa 10 lượt/ngày).",
+            reason: data.warning || "Google Gemini TTS đã vượt quá hạn mức miễn phí (429 Quota Exceeded: tối đa 10 lượt/ngày).",
             details: "Hệ thống đã tự động chuyển ô Giọng đọc sang VieNeu Local (" + (data.fallbackVoice || "Hải Đăng") + "), đồng thời loại bỏ các tag <sigh>, <laugh>... để bộ đọc VieNeu không phát âm thành 'dấu nhỏ hơn, dấu bé hơn'."
           });
           onNotify("success", `⚠️ ${data.warning || "Đã tự động chuyển sang VieNeu Local do Gemini hết quota!"}`);

@@ -1,5 +1,42 @@
 {
   "projectSlug": "doi-quan-dat-nung",
-  "updatedAt": "2026-10-06T05:31:13.760Z",
-  "assets": []
+  "updatedAt": "2026-10-07T04:06:54.539Z",
+  "assets": [
+    {
+      "id": "b3",
+      "beatId": "b3",
+      "kind": "image",
+      "fileName": "b3.png",
+      "filePath": "assets/processed/b3.png",
+      "license": "CC0",
+      "source": "ai-generated-user-import",
+      "sizeBytes": 180639,
+      "sha256": "c95e8e18e448f013438b392d8d86bf1afedba9e41e693b024090f7666e6e90b2",
+      "importedAt": "2026-10-07T04:06:54.511Z"
+    },
+    {
+      "id": "b2",
+      "beatId": "b2",
+      "kind": "image",
+      "fileName": "b2.png",
+      "filePath": "assets/processed/b2.png",
+      "license": "CC0",
+      "source": "ai-generated-user-import",
+      "sizeBytes": 187338,
+      "sha256": "b5fa785cf4ec48827fc0457b194bac68513f75bbfa95782a740ce00b4fc28969",
+      "importedAt": "2026-10-07T04:06:54.526Z"
+    },
+    {
+      "id": "b1",
+      "beatId": "b1",
+      "kind": "image",
+      "fileName": "b1.png",
+      "filePath": "assets/processed/b1.png",
+      "license": "CC0",
+      "source": "ai-generated-user-import",
+      "sizeBytes": 150382,
+      "sha256": "a6d144933f36b07a6d99c9b5c31bc730abd550318ad059cecf8c3ef5f0f3ff36",
+      "importedAt": "2026-10-07T04:06:54.539Z"
+    }
+  ]
 }
